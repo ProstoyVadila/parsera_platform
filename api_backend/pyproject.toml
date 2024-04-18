@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "api_backend"
+version = "0.1.0"
+description = ""
+authors = ["Vadim Gorbachev <vadim.gorbachev.dev@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+loguru = "^0.7.1"
+orjson = "^3.9.6"
+aioamqp = "^0.15.0"
+pydantic = { version = "^1.0", extras = ["dotenv"] }
+fastapi = "^0.103.1"
+propan = {extras = ["async-rabbit"], version = "^0.1.5.23"}
+uvicorn = "^0.23.2"
+fastapi-utils = "^0.2.1"
+asyncpg = "^0.28.0"
+borsh-python = "^0.1.5"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

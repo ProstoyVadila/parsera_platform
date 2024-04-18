@@ -1,0 +1,21 @@
+# os
+.DS_Store
+
+# ide
+.vscode/
+
+# global
+*.env
+test-compose.yaml
+
+# configs
+
+# Rust
+target/
+
+# Scheduler and Python
+__pycache__/
+logs/
+
+# Proxy_manager and Go
+proxy_manager/bin

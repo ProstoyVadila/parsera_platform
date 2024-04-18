@@ -1,0 +1,123 @@
+services:
+  postgres:
+    build:
+      context: .
+      dockerfile: configs/postgres/Dockerfile
+      args:
+        POSTGRES_DB: "scrapped_data"
+    ports:
+      - "5432:5432"
+    restart: always
+    environment:
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "scrapped_data"
+      POSTGRES_PORT: 5432
+    healthcheck:
+      test: pg_isready -U admin -d scrapped_data
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.2.1-alpine
+    ports:
+      - "6379:6379"
+    restart: always
+    environment:
+      REDIS_HOST: "redis"
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: "password"
+      REDIS_SSL: "false"
+    healthcheck:
+      test: redis-cli ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbit:
+    build:
+      context: .
+      dockerfile: configs/rabbitmq/Dockerfile
+      args:
+        RABBITMQ_ADMIN_USER: "admin"
+        RABBITMQ_ADMIN_PASSWORD: "password"
+        RABBITMQ_GUEST_USER: "guest"
+        RABBITMQ_GUEST_PASSWORD: "guest"
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    restart: always
+    healthcheck:
+      test: rabbitmq-diagnostics -q status && rabbitmq-diagnostics check_port_connectivity
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  scrapper:
+    build:
+      context: .
+      dockerfile: scrapper/Dockerfile
+    depends_on:
+      redis:
+        condition: service_healthy
+      rabbit:
+        condition: service_healthy
+    environment:
+      RABBITMQ_ADMIN_USER: "guest"
+      RABBITMQ_ADMIN_PASSWORD: "guest"
+      RABBITMQ_VHOST: "/"
+      RABBITMQ_HOST: "rabbit"
+      RABBITMQ_PORT: 5672
+      REDIS_SSL: "false"
+      LOG_LEVEL: "DEBUG"
+      RUST_LOG: "trace"
+
+  extractor:
+    build:
+      context: .
+      dockerfile: extractor/Dockerfile
+    depends_on:
+      rabbit:
+        condition: service_healthy
+    environment:
+      RABBITMQ_ADMIN_USER: "guest"
+      RABBITMQ_ADMIN_PASSWORD: "guest"
+      RABBITMQ_VHOST: "/"
+      RABBITMQ_HOST: "rabbit"
+      RABBITMQ_PORT: 5672
+      REDIS_SSL: "false"
+      LOG_LEVEL: "DEBUG"
+      RUST_LOG: "trace"
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "scrapped_data"
+      POSTGRES_HOST: "postgres"
+      POSTGRES_PORT: 5432
+
+  api_backend:
+    build:
+      context: .
+      dockerfile: api_backend/Dockerfile
+    ports:
+      - "8000:8000"
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbit:
+        condition: service_healthy
+    environment:
+      RABBITMQ_ADMIN_USER: guest
+      RABBITMQ_ADMIN_PASSWORD: guest
+      RABBITMQ_GUEST_USER: guest
+      RABBITMQ_GUEST_PASSWORD: guest
+      RABBITMQ_HOST: rabbit
+      RABBITMQ_VHOST: /
+      RABBITMQ_PORT: 5672
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: scrapped_data
+      LOG_LEVEL: DEBUG

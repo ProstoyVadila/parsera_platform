@@ -1,0 +1,27 @@
+[package]
+name = "api_gateway"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dotenv = { workspace = true }
+envconfig = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+common = { path = "../common" }
+axum = { version = "0.7.5", features = ["tokio", "json", "macros"]}
+tokio = { version = "1.37.0", features = ["full"] }
+tower-http = {version = "0.5.2", features = ["trace", "timeout"] }
+sqlx = { version = "0.7.4", features = ["any", "postgres", "runtime-tokio", "uuid", "chrono", "json"] }
+tokio-amqp = "2.0.0"
+lapin = {version = "2.3.1", features = ["serde_json"] }
+rand = "0.8.5"
+bb8 = "0.8"
+bb8-redis = "0.15.0"
+redis = "0.25.3"
+bb8-lapin = "0.5.0"
