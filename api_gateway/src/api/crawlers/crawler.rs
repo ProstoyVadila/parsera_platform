@@ -11,51 +11,50 @@ use crate::rabbit::RabbitMQ;
 use crate::app::SharedState;
 
 
-#[derive(Deserialize)]
-pub struct CrawlerPayloadIn {
-    pub user_id: String,
-    pub crawler_id: String,
-}
+// #[derive(Deserialize)]
+// pub struct CrawlerPayloadIn {
+//     pub user_id: String,
+//     pub crawler_id: String,
+// }
 
-#[derive(Serialize)]
-pub struct CrawlerPayloadOut {
-    pub user_id: String,
-    pub crawler_id: String,
-    pub options: String,
-}
+// #[derive(Serialize)]
+// pub struct CrawlerPayloadOut {
+//     pub user_id: String,
+//     pub crawler_id: String,
+//     pub options: String,
+// }
 
-pub async fn get_crawlers(Json(payload): Json<CrawlerPayloadIn>) -> Json<CrawlerPayloadOut> {
-    let out = CrawlerPayloadOut {
-        user_id: payload.user_id,
-        crawler_id: payload.crawler_id,
-        options: "damn.".to_string(),
-    };
-    Json(out)
-}
+// pub async fn get_crawlers(Json(payload): Json<CrawlerPayloadIn>) -> Json<CrawlerPayloadOut> {
+//     let out = CrawlerPayloadOut {
+//         user_id: payload.user_id,
+//         crawler_id: payload.crawler_id,
+//         options: "damn.".to_string(),
+//     };
+//     Json(out)
+// }
 
 
-pub struct CreateCrawlerPayloadIn {
+// pub struct CreateCrawlerPayloadIn {
 
-}
+// }
 
-pub async fn create_crawler(
-    Json(payload): Json<CrawlerPayloadIn>,
-    State(state): State<SharedState>,
-) -> Json<CrawlerPayloadOut> {
+// pub async fn create_crawler(
+//     Json(payload): Json<CrawlerPayloadIn>,
+//     State(state): State<SharedState>,
+// ) -> Json<CrawlerPayloadOut> {
     
-    let out = CrawlerPayloadOut {
-        user_id: payload.user_id,
-        crawler_id: payload.crawler_id,
-        options: "registered".to_string(),
-    };
+//     let out = CrawlerPayloadOut {
+//         user_id: payload.user_id,
+//         crawler_id: payload.crawler_id,
+//         options: "registered".to_string(),
+//     };
 
-    let task = serde_json::to_string(&out).expect("task serialized");
-    let channel = state.rabbit.get_channel().await.expect("hehe");
-    let confirm = state.rabbit.publish(channel, task.as_bytes()).await;
-    // let rabbit = &state.
+//     let task = serde_json::to_string(&out).expect("task serialized");
+//     let confirm = state.rabbit.publish(task.as_bytes()).await;
+//     // let rabbit = &state.
 
-    Json(out)
-}
+//     Json(out)
+// }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AddSitePayloadIn {
@@ -101,18 +100,7 @@ pub async fn add_site(
         }
     };
 
-    let channel = match state.rabbit.get_channel().await {
-        Ok(ch) => ch,
-        Err(err) => {
-            tracing::error!("cannot get channel: {}", err);
-            return Json(AddSitePayloadOut{
-                params: payload.clone(),
-                event_id: event.id,
-                status: EventStatus::RegisterError,
-            });
-        }
-    };
-    let _ = match state.rabbit.publish(channel, event_json.as_bytes()).await {
+    let _ = match state.rabbit.publish(event_json.as_bytes()).await {
         Ok(ok) => ok,
         Err(err) => {
             tracing::error!("cannot publish message: {}", err);
