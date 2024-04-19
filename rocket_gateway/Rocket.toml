@@ -1,0 +1,20 @@
+[default]
+address = "127.0.0.1"
+port = 8080
+workers = 8
+max_blocking = 256
+keep_alive = 5
+cli_colors = true
+
+[default.shutdown]
+ctrlc = true
+signals = ["term", "hup"]
+grace = 10
+mercy = 10
+
+
+[default.databases.redis]
+url = "redis://default:password@localhost:6379/"
+
+[default.databases.postgres]
+url = "postgres://admin:password@localhost:5432/scrapped_data"

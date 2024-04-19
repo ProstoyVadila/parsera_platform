@@ -1,0 +1,19 @@
+[package]
+name = "rocket_gateway"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dotenv = { workspace = true }
+envconfig = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+rand = { workspace = true }
+common = { path = "../common" }
+rocket = { version = "0.5.0", features = ["json", "serde_json", "uuid"] }
+rocket_db_pools ={ version = "0.1.0", features = ["deadpool_redis", "sqlx_postgres"] }
