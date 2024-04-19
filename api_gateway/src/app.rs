@@ -8,7 +8,7 @@ use tracing::Level;
 
 use crate::{
     rabbit::RabbitMQ,
-    config::{Broker, Config, Database, DbAddr, RedisConfig},
+    config::{BrokerConfig, Config, Database, DbAddr, RedisConfig},
     // routes::set_routes
 };
 use crate::redis::{self, RedisConnectionPool};
@@ -59,7 +59,7 @@ impl App {
 
     async fn get_pg_pool(cfg: Database) -> sqlx::Pool<sqlx::Postgres> {
         tracing::info!("Setting up postgres pool...");
-        let pg_pool = database::try_get_pg_pool(cfg.get_dsn()).await;
+        let pg_pool = database::try_get_pg_pool(cfg.get_addr()).await;
         pg_pool
     }
 
@@ -70,7 +70,7 @@ impl App {
         redis_pool
     }
 
-    async fn get_rabbitmq(cfg: Broker) -> RabbitMQ {
+    async fn get_rabbitmq(cfg: BrokerConfig) -> RabbitMQ {
         tracing::info!("Setting up rabbitmq pool...");
         let rabbit_pool = RabbitMQ::new(cfg).await;
         rabbit_pool

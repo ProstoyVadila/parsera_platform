@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use axum::extract::{FromRef, FromRequest};
 use axum::{extract::State, Extension, Json};
 use axum::debug_handler;
 use serde::{Deserialize, Serialize};
@@ -9,6 +10,7 @@ use common::models::{EventStatus, AddSiteEvent};
 
 use crate::rabbit::RabbitMQ;
 use crate::app::SharedState;
+use crate::redis::{RedisConnection, RedisConnectionPool};
 
 
 // #[derive(Deserialize)]
@@ -73,7 +75,6 @@ pub struct AddSitePayloadOut {
     
 }
 
-#[debug_handler]
 pub async fn add_site(
     State(state): State<SharedState>,
     Json(payload): Json<AddSitePayloadIn>, 
@@ -100,6 +101,7 @@ pub async fn add_site(
         }
     };
 
+    let domain = "parsera".to_string();
     let _ = match state.rabbit.publish(event_json.as_bytes()).await {
         Ok(ok) => ok,
         Err(err) => {

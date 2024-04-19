@@ -11,6 +11,12 @@
       "password_hash": "<guest_hashed_password>",
       "hashing_algorithm": "rabbit_password_hashing_sha256",
       "tags": ""
+    },
+    {
+      "name": "service",
+      "password_hash": "<service_hashed_password>",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": ""
     }
   ],
   "permissions": [
@@ -27,7 +33,14 @@
       "configure": ".*",
       "write": ".*",
       "read": ".*"
+    },
+    {
+      "user": "service",
+      "vhost": "parsera",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
     }
   ],
-  "vhosts": [{ "name": "/" }]
+  "vhosts": [{ "name": "/" }, { "name": "parsera" }]
 }

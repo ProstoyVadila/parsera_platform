@@ -22,8 +22,8 @@ pub type RedisConnectionPool = Pool<RedisConnectionManager>;
 
 
 pub async fn get_redis_pool(cfg: RedisConfig) -> RedisConnectionPool {
-    tracing::debug!("redis config: {}", cfg.get_dsn());
-    let manager = match RedisConnectionManager::new(cfg.get_dsn()) {
+    tracing::debug!("redis config: {}", cfg.get_addr());
+    let manager = match RedisConnectionManager::new(cfg.get_addr()) {
         Ok(m) => m,
         Err(err) => {
             tracing::error!("cannot get redis connection manager: {}", err);
@@ -54,6 +54,7 @@ pub async fn check_conn(pool: RedisConnectionPool) {
     assert_eq!(result, "bar");
 }
 
+// pub async fn get_RedisConnection()
 
 #[async_trait]
 impl<S> FromRequestParts<S> for RedisConnection

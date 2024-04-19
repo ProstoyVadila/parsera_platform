@@ -43,16 +43,19 @@ function exit_if_empty() {
 # templates to replace
 ADMIN_PASS_TEMPLATE="<admin_hashed_password>"
 GUEST_PASS_TEMPLATE="<guest_hashed_password>"
+SERVICE_PASS_TEMPLATE="<service_hashed_password>"
 
 # file to replace
 FILE="/etc/rabbitmq/definitions.json"
 
 #check env variables
 ENV_VARIABLES=(
-    RABBITMQ_ADMIN_PASSWORD
-    RABBITMQ_GUEST_PASSWORD
     RABBITMQ_ADMIN_USER
+    RABBITMQ_ADMIN_PASSWORD
     RABBITMQ_GUEST_USER
+    RABBITMQ_GUEST_PASSWORD
+    RABBITMQ_SERVICE_USER
+    RABBITMQ_SERVICE_PASSWORD
 )
 for item in "${ENV_VARIABLES[@]}"; do
     exit_if_empty "${!item}"
@@ -82,9 +85,11 @@ done
 # generate password's hashes
 ADMIN_PASS=$(encode_password "$RABBITMQ_ADMIN_PASSWORD")
 GUEST_PASS=$(encode_password "$RABBITMQ_GUEST_PASSWORD")
+SERVICE_PASS=$(encode_password "$RABBITMQ_SERVICE_PASSWORD")
 
 # replace passwords in definitions.json
 replace $ADMIN_PASS_TEMPLATE "$ADMIN_PASS" "$FILE"
 replace $GUEST_PASS_TEMPLATE "$GUEST_PASS" "$FILE"
+replace $SERVICE_PASS_TEMPLATE "$SERVICE_PASS" "$FILE"
 
 exit 0

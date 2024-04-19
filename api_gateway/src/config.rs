@@ -5,7 +5,7 @@ use tracing;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 pub trait DbAddr {
-    fn get_dsn(&self) -> String;
+    fn get_addr(&self) -> String;
 }
 
 #[derive(Envconfig, Clone, Debug)]
@@ -23,7 +23,7 @@ pub struct Database {
 }
 
 impl DbAddr for Database {
-    fn get_dsn(&self) -> String {
+    fn get_addr(&self) -> String {
         format!("postgres://{}:{}@{}:{}/{}", self.user, self.password, self.host, self.port, self.db)
     }
 }
@@ -43,31 +43,45 @@ pub struct RedisConfig {
 }
 
 impl DbAddr for RedisConfig {
-    fn get_dsn(&self) -> String {
+    fn get_addr(&self) -> String {
         tracing::debug!("GET DSN: {} {}", self.user, self.host);
         format!("redis://{}:{}@{}:{}/{}", self.user, self.password, self.host, self.port, self.db)
     }
 }
 
 #[derive(Envconfig, Clone, Debug)]
-pub struct Broker {
+pub struct BrokerConfig {
     #[envconfig(from = "RABBITMQ_HOST")]
     pub host: String,
     #[envconfig(from = "RABBITMQ_PORT")]
     pub port: u16,
+    #[envconfig(from = "RABBITMQ_USER")]
+    pub user: String,
     #[envconfig(from = "RABBITMQ_PASSWORD")]
     pub password: String,
+    #[envconfig(from = "RABBITMQ_VHOST")]
+    pub vhost: String,
     #[envconfig(from = "RABBITMQ_EXCHANGE")]
     pub exchange: String,
     #[envconfig(from = "RABBITMQ_QUEUE")]
     pub queue: String,
-    #[envconfig(from = "RABBITMQ_USER")]
-    pub user: String
+    #[envconfig(from = "RABBITMQ_QUEUE_NUM")]
+    pub queue_num: u8,
 }
 
-impl DbAddr for Broker {
-    fn get_dsn(&self) -> String {
-        format!("amqp://{}:{}@{}:{}", self.user, self.password, self.host, self.port)
+impl DbAddr for BrokerConfig {
+    fn get_addr(&self) -> String {
+        let vhost = {
+            if self.vhost.starts_with("/") {
+                let mut vhost = self.vhost.clone();
+                vhost.remove(0);
+                vhost
+            } else {
+                self.vhost.clone()
+            }
+
+        };
+        format!("amqp://{}:{}@{}:{}/{}", self.user, self.password, self.host, self.port, vhost)
     }
 }
 
@@ -78,7 +92,7 @@ pub struct Config {
     #[envconfig(nested = true)]
     pub cache: RedisConfig,
     #[envconfig(nested = true)]
-    pub broker: Broker,
+    pub broker: BrokerConfig,
     #[envconfig(from = "LOG_FORMAT", default="text")]
     pub log_format: String,
     #[envconfig(from = "HOST", default="localhost")]
