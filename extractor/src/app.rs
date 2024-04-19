@@ -7,6 +7,7 @@ use std::sync::Arc;
 use futures_lite::stream::StreamExt;
 use lapin::message::Delivery;
 use log;
+use serde::de;
 
 
 pub struct App {
@@ -47,7 +48,9 @@ impl App {
             let app = Arc::clone(&self);
             match delivery {
                 Ok(delivery) => {
-                    app.handle_message(delivery).await;
+                    // app.handle_message(delivery).await;
+                    let msg = std::str::from_utf8(&delivery.data).expect("cannot");
+                    log::info!("DELIVERY! {}", msg);
                 }
                 Err(e) => {
                     log::error!("Error receiving message: {:?}", e);

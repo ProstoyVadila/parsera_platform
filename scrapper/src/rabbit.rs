@@ -24,11 +24,11 @@ impl Broker {
         let conn = Connection::connect(&conf.get_url(), ConnectionProperties::default()).await?;
         let channel = conn.create_channel().await?;
 
-        let queue_in = "scrapper_in".to_string();
+        let queue_in = "queue1".to_string();
         let queue_out = "extractor_in".to_string();
-        let exchange_in = "scrapper_in".to_string();
+        let exchange_in = "exchange1".to_string();
         let exchange_out = "extractor_in".to_string();
-        let routing_key = "scrapper_in".to_string();
+        let routing_key = "queue1".to_string();
         Ok(Broker {
             conn,
             channel,
@@ -41,7 +41,7 @@ impl Broker {
     }
 
     pub async fn start(&self) -> Result<()> {
-        self.declare_all().await?;
+        // self.declare_all().await?;
         self.consume().await?;
         Ok(())
     }
@@ -82,7 +82,7 @@ impl Broker {
             .channel
             .basic_consume(
                 &self.queue_in,
-                "extractor_in",
+                "scrapper",
                 BasicConsumeOptions::default(),
                 FieldTable::default(),
             )
@@ -93,15 +93,15 @@ impl Broker {
                 Ok(delivery) => {
                     let msg_in = std::str::from_utf8(&delivery.data).unwrap();
                     log::info!(" [x] Received {}", msg_in);
-                    let msg_out = match handlers::handle_srcap_event(msg_in).await {
-                        Ok(msg_out) => msg_out,
-                        Err(e) => {
-                            log::error!("Error in handle_parse_event: {}", e);
-                            continue;
-                        }
-                    };
-                    let msg_out = msg_out.as_slice();
-                    self.publish(&msg_out).await?;
+                    // let msg_out = match handlers::handle_srcap_event(msg_in).await {
+                    //     Ok(msg_out) => msg_out,
+                    //     Err(e) => {
+                    //         log::error!("Error in handle_parse_event: {}", e);
+                    //         continue;
+                    //     }
+                    // };
+                    // let msg_out = msg_out.as_slice();
+                    self.publish(msg_in.as_bytes()).await?;
                     self.channel
                         .basic_ack(delivery.delivery_tag, BasicAckOptions::default())
                         .await?;

@@ -37,13 +37,15 @@ services:
 
   rabbit:
     build:
-      context: .
-      dockerfile: configs/rabbitmq/Dockerfile
+      context: configs/rabbitmq
+      dockerfile: Dockerfile
       args:
         RABBITMQ_ADMIN_USER: "admin"
         RABBITMQ_ADMIN_PASSWORD: "password"
         RABBITMQ_GUEST_USER: "guest"
         RABBITMQ_GUEST_PASSWORD: "guest"
+        RABBITMQ_SERVICE_USER: "service"
+        RABBITMQ_SERVICE_PASSWORD: "063fc341f5f9de0d8ee3dd8b6aa80b41"
     ports:
       - "15672:15672"
       - "5672:5672"
