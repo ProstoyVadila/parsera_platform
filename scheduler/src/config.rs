@@ -1,4 +1,4 @@
-#![allow(dead_code,unused)]
+// #![allow(dead_code,unused)]
 use std::{env, net::{SocketAddr, ToSocketAddrs}};
 
 use envconfig::Envconfig;
@@ -114,16 +114,10 @@ impl Config {
                 .with(tracing_subscriber::fmt::layer())
                 .init();
         }
-        
-        // let sched_subscriber = tracing_subscriber::registry()
-        //     .with(tracing_subscriber::EnvFilter::try_from_default_env()
-        //         .unwrap_or_else(|_| "actix-web=debug".into()))
-        //     .with(tracing_subscriber::fmt::layer());
-        // tracing::subscriber::set_global_default(sched_subscriber).expect("cannot set global subscriber");
     }
 
     pub fn get_socket_addr(&self) -> SocketAddr {
-        let default_socket_addr = SocketAddr::from(([127,0,0,1], 8080));
+        let default_socket_addr = SocketAddr::from(([127,0,0,1], self.port));
         if self.host == "localhost" {
             return default_socket_addr;
         }

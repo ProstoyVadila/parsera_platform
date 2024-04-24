@@ -11,7 +11,7 @@ fn initial_job() -> Result<Job, JobSchedulerError> {
     })
 }
 
-pub async fn register_jobs(mut sched: &mut SharedSheduler) -> Result<()> {
+pub async fn register_initial_jobs(mut sched: &mut SharedSheduler) -> Result<()> {
     tracing::info!("Registering initial jobs for scheduler");
     sched
         .lock()
