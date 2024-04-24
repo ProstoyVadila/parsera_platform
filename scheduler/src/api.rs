@@ -35,7 +35,7 @@ async fn add_routine(
     })
     .unwrap_or_else(|_| panic!("cannot register a new job for request {}", req_id));
 
-    let job_id = sched.lock().unwrap().add(job).await.expect("cannot register a a new job");
+    let job_id = sched.lock().await.add(job).await.expect("cannot register a a new job");
 
     web::Json(RoutineOut{
         info: routine.0,

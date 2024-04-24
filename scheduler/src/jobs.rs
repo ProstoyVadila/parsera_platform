@@ -13,7 +13,7 @@ pub async fn register_initial_jobs(mut sched: &mut SharedSheduler) -> Result<()>
     tracing::info!("Registering initial jobs for scheduler");
     sched
         .lock()
-        .expect("cannot lock sched")
+        .await
         .add(initial_job().expect("cannot register initial job"))
         .await?;
     Ok(())

@@ -1,9 +1,11 @@
 #![allow(dead_code, unused)]
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use anyhow::{Ok, Result};
+use tokio::sync::Mutex;
 use tokio_cron_scheduler::JobScheduler;
 
+mod broker;
 mod api;
 mod config;
 mod jobs;
@@ -22,7 +24,7 @@ async fn main() -> Result<()> {
     tracing::info!("Starting scheduler...");
     sched
         .lock()
-        .expect("cannot start scheduler")
+        .await
         .start()
         .await?;
 
