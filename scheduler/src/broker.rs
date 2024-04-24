@@ -129,7 +129,7 @@ impl Rabbit {
                 FieldTable::default(),
             )
             .await?;
-
+        // TODO: fix error handling
         while let Some(delivery) = consumer.next().await {
             match delivery {
                 Ok(delivery) => {
