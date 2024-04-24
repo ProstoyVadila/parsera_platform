@@ -3256,6 +3256,7 @@ dependencies = [
  "serde_json",
  "tokio",
  "tokio-cron-scheduler",
+ "tokio-stream",
  "tracing",
  "tracing-actix-web",
  "tracing-subscriber",

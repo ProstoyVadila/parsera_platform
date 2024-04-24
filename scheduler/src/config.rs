@@ -55,17 +55,21 @@ pub struct BrokerConfig {
 
 impl BrokerConfig {
     // TODO: remove this mock
-    pub fn queues(&self) -> Vec<String> {
+    pub fn queues_to_produce(&self) -> Vec<String> {
         vec!["queue1".into(), "queue2".into()]
+    }
+
+    pub fn queue_to_consume(&self) -> String {
+        "queue".into()
     }
 }
 
 impl DbAddr for BrokerConfig {
     fn get_addr(&self) -> String {
         let vhost = {
-            if self.vhost.starts_with('/') {
+            if self.vhost.starts_with("/") {
                 let mut vhost = self.vhost.clone();
-                vhost.remove(0);
+                vhost.replace("/", "%2f");
                 vhost
             } else {
                 self.vhost.clone()

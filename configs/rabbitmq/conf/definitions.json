@@ -22,7 +22,7 @@
   "permissions": [
     {
       "user": "admin",
-      "vhost": "/",
+      "vhost": "/parsera",
       "configure": ".*",
       "write": ".*",
       "read": ".*"
@@ -36,11 +36,11 @@
     },
     {
       "user": "service",
-      "vhost": "parsera",
+      "vhost": "/parsera",
       "configure": ".*",
       "write": ".*",
       "read": ".*"
     }
   ],
-  "vhosts": [{ "name": "/" }, { "name": "parsera" }]
+  "vhosts": [{ "name": "/" }, { "name": "/parsera" }]
 }
