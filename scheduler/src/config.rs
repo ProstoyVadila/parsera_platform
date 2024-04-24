@@ -95,6 +95,15 @@ pub struct Config {
 impl Config {
     pub fn new() -> Config {
         // If LOCAL_RUN is set and true, load .env file
+        if env::var("RUST_LOG").is_err() {
+            env::set_var("RUST_LOG", "debug")
+        }
+        let log_format = match env::var("LOG_FORMAT") {
+            Ok(l) => l,
+            _ => "text".into(),
+        };
+        Self::init_tracing(log_format.as_str());
+
         if env::var("LOCAL_RUN").is_ok_and(|local| local == "true") {
             use dotenv::dotenv;
 
@@ -111,8 +120,8 @@ impl Config {
         }
     }
 
-    pub fn init_tracing(&self) {
-        if self.log_format == "json" {
+    pub fn init_tracing(log_format: &str) {
+        if log_format == "json" {
             tracing_subscriber::registry()
                 .with(
                     tracing_subscriber::EnvFilter::try_from_default_env()

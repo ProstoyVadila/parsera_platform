@@ -15,7 +15,6 @@ pub type SharedSheduler = Arc<Mutex<JobScheduler>>;
 #[tokio::main]
 async fn main() -> Result<()> {
     let cfg = config::Config::new();
-    cfg.init_tracing();
 
     let sched = Arc::new(Mutex::new(JobScheduler::new().await?));
 
