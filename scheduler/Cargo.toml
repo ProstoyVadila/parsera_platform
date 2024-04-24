@@ -1,0 +1,25 @@
+[package]
+name = "scheduler"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dotenv = { workspace = true }
+envconfig = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+rand = { workspace = true }
+anyhow = { workspace = true }
+
+common = { path = "../common" }
+
+tokio = {version = "1.37.0", features = ["full"]}
+tokio-cron-scheduler = { version = "0.10.0", features = ["has_bytes", "postgres_storage", "signal"] }
+# Temp
+actix-web = "4.5.1"
+tracing-actix-web = "0.7.10"
