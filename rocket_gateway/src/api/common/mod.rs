@@ -1,3 +1,6 @@
+use std::time::Duration;
+use rocket::tokio::{sync::oneshot, time::sleep};
+use rocket::{tokio, State};
 
 use rocket_db_pools::{
     deadpool_redis::redis::AsyncCommands, 
@@ -5,7 +8,8 @@ use rocket_db_pools::{
     Connection
 };
 
-use crate::{Redis, Postgres};
+use crate::broker::Rabbit;
+use crate::{Postgres, Redis};
 
 #[get("/healthcheck")]
 pub async fn get_healthcheck() -> &'static str {
@@ -28,4 +32,28 @@ pub async fn test_get_site(mut pg: Connection<Postgres>) -> Option<String> {
         .and_then(|r| Ok(r.try_get(0)?))
         .ok();
     row
+}
+
+// test with state
+#[get("/test_state_rabbit")]
+pub async fn test_state_rabbit(rabbit: &State<Rabbit>) -> &'static str {
+    rabbit.publish("hello there".as_bytes()).await;
+    "ok"
+}
+
+#[get("/test_spawn_task")]
+pub async fn get_spawn_task() -> String {
+    println!("Creating oneshot");
+    let (tx, rx) = oneshot::channel::<String>();
+    tokio::spawn(async move {
+        println!("going to sleep 3 secs");
+        sleep(Duration::from_secs(3)).await;
+        println!("Sending message");
+        tx.send("I slept a lot".into()).expect("cannot send oneshot msg to rx");
+    });
+
+    println!("Waiting for msg");
+    let msg = rx.await.expect("cannot get oneshot msg");
+    println!("Got the msg!");
+    msg
 }

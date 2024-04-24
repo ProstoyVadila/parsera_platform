@@ -16,6 +16,8 @@ use common::{
     get_healthcheck,
     set_bo,
     test_get_site,
+    test_state_rabbit,
+    get_spawn_task,
 };
 
 
@@ -24,6 +26,8 @@ pub fn get_routes() -> Vec<Route> {
         get_healthcheck,
         set_bo,
         test_get_site,
+        get_spawn_task,
+        test_state_rabbit,
     
         get_crawler,
         add_crawler,

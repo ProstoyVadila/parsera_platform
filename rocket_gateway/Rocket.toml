@@ -2,9 +2,11 @@
 address = "127.0.0.1"
 port = 8080
 workers = 8
-max_blocking = 256
+max_blocking = 516
 keep_alive = 5
 cli_colors = true
+ident = "Api Gateway"
+log_level = "normal"
 
 [default.shutdown]
 ctrlc = true
