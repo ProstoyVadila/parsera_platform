@@ -3248,6 +3248,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "common",
+ "deadpool-lapin",
  "dotenv",
  "envconfig",
  "rand",

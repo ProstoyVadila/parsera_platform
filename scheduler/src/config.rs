@@ -1,5 +1,8 @@
 // #![allow(dead_code,unused)]
-use std::{env, net::{SocketAddr, ToSocketAddrs}};
+use std::{
+    env,
+    net::{SocketAddr, ToSocketAddrs},
+};
 
 use envconfig::Envconfig;
 use tracing;
@@ -15,20 +18,22 @@ pub struct Database {
     pub host: String,
     #[envconfig(from = "POSTGRES_PORT", default = "5432")]
     pub port: u16,
-    #[envconfig(from = "POSTGRES_PASSWORD", default = "" )]
+    #[envconfig(from = "POSTGRES_PASSWORD", default = "")]
     pub password: String,
     #[envconfig(from = "POSTGRES_DB", default = "postgres")]
     pub db: String,
     #[envconfig(from = "POSTGRES_USER", default = "postgres")]
-    pub user: String
+    pub user: String,
 }
 
 impl DbAddr for Database {
     fn get_addr(&self) -> String {
-        format!("postgres://{}:{}@{}:{}/{}", self.user, self.password, self.host, self.port, self.db)
+        format!(
+            "postgres://{}:{}@{}:{}/{}",
+            self.user, self.password, self.host, self.port, self.db
+        )
     }
 }
-
 
 #[derive(Envconfig, Clone, Debug)]
 pub struct BrokerConfig {
@@ -53,16 +58,18 @@ pub struct BrokerConfig {
 impl DbAddr for BrokerConfig {
     fn get_addr(&self) -> String {
         let vhost = {
-            if self.vhost.starts_with("/") {
+            if self.vhost.starts_with('/') {
                 let mut vhost = self.vhost.clone();
                 vhost.remove(0);
                 vhost
             } else {
                 self.vhost.clone()
             }
-
         };
-        format!("amqp://{}:{}@{}:{}/{}", self.user, self.password, self.host, self.port, vhost)
+        format!(
+            "amqp://{}:{}@{}:{}/{}",
+            self.user, self.password, self.host, self.port, vhost
+        )
     }
 }
 
@@ -72,11 +79,11 @@ pub struct Config {
     pub database: Database,
     #[envconfig(nested = true)]
     pub broker: BrokerConfig,
-    #[envconfig(from = "LOG_FORMAT", default="text")]
+    #[envconfig(from = "LOG_FORMAT", default = "text")]
     pub log_format: String,
-    #[envconfig(from = "HOST", default="localhost")]
+    #[envconfig(from = "HOST", default = "localhost")]
     pub host: String,
-    #[envconfig(from = "PORT", default="8080")]
+    #[envconfig(from = "PORT", default = "8080")]
     pub port: u16,
 }
 
@@ -90,34 +97,37 @@ impl Config {
             tracing::info!("Local Run mode enabled")
         }
 
-        let config = match Config::init_from_env() {
+        match Config::init_from_env() {
             Ok(config) => config,
             Err(err) => {
                 tracing::error!("Cannot load config: {}", err);
                 panic!("cannot load config");
             }
-        };
-        config
+        }
     }
 
     pub fn init_tracing(&self) {
         if self.log_format == "json" {
             tracing_subscriber::registry()
-                .with(tracing_subscriber::EnvFilter::try_from_default_env()
-                    .unwrap_or_else(|_| "scheduler=debug".into()))
+                .with(
+                    tracing_subscriber::EnvFilter::try_from_default_env()
+                        .unwrap_or_else(|_| "scheduler=debug".into()),
+                )
                 .with(tracing_subscriber::fmt::layer().json())
                 .init();
         } else {
             tracing_subscriber::registry()
-                .with(tracing_subscriber::EnvFilter::try_from_default_env()
-                    .unwrap_or_else(|_| "scheduler=debug".into()))
+                .with(
+                    tracing_subscriber::EnvFilter::try_from_default_env()
+                        .unwrap_or_else(|_| "scheduler=debug".into()),
+                )
                 .with(tracing_subscriber::fmt::layer())
                 .init();
         }
     }
 
     pub fn get_socket_addr(&self) -> SocketAddr {
-        let default_socket_addr = SocketAddr::from(([127,0,0,1], self.port));
+        let default_socket_addr = SocketAddr::from(([127, 0, 0, 1], self.port));
         if self.host == "localhost" {
             return default_socket_addr;
         }
@@ -129,10 +139,9 @@ impl Config {
                 Some(default_socket_addr)
             }
         };
-        let addr = match addr {
+        match addr {
             Some(addr) => addr,
             _ => default_socket_addr,
-        };
-        addr
+        }
     }
 }
