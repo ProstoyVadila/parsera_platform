@@ -49,10 +49,15 @@ pub struct BrokerConfig {
     pub vhost: String,
     #[envconfig(from = "RABBITMQ_EXCHANGE")]
     pub exchange: String,
-    #[envconfig(from = "RABBITMQ_QUEUE")]
-    pub queue: String,
-    #[envconfig(from = "RABBITMQ_QUEUE_NUM")]
-    pub queue_num: u8,
+    // #[envconfig(from = "RABBITMQ_QUEUE")]
+    // pub queues: Vec<String>,
+}
+
+impl BrokerConfig {
+    // TODO: remove this mock
+    pub fn queues(&self) -> Vec<String> {
+        vec!["queue1".into(), "queue2".into()]
+    }
 }
 
 impl DbAddr for BrokerConfig {

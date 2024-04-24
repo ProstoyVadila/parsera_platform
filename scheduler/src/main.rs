@@ -5,8 +5,8 @@ use anyhow::{Ok, Result};
 use tokio::sync::Mutex;
 use tokio_cron_scheduler::JobScheduler;
 
-mod broker;
 mod api;
+mod broker;
 mod config;
 mod jobs;
 
@@ -22,11 +22,7 @@ async fn main() -> Result<()> {
     jobs::register_initial_jobs(&mut sched.clone()).await?;
 
     tracing::info!("Starting scheduler...");
-    sched
-        .lock()
-        .await
-        .start()
-        .await?;
+    sched.lock().await.start().await?;
 
     api::run_server(cfg, sched).await?;
     Ok(())
