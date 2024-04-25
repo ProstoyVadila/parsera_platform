@@ -12,6 +12,7 @@ use rand::{rngs::ThreadRng, seq::SliceRandom};
 use tokio_stream::StreamExt;
 
 use crate::config::{BrokerConfig, DbAddr};
+use crate::{scheduler, SharedSheduler};
 
 pub struct Rabbit {
     pub cfg: BrokerConfig,
@@ -117,7 +118,7 @@ impl Rabbit {
             .expect("cannot send message to the queue");
     }
 
-    pub async fn consume(&self) -> Result<()> {
+    pub async fn consume(&self, sched: SharedSheduler) -> Result<()> {
         let queue = &self.cfg.queue_to_consume();
         tracing::info!("consuming from queue {}", queue);
         let channel = self.get_channel().await;
@@ -135,8 +136,8 @@ impl Rabbit {
                 Ok(delivery) => {
                     let event = str::from_utf8(&delivery.data)
                         .expect("error converting message from consumer");
-                    // TODO: impl handling event
-                    tracing::info!("Got event from consumer: {}", event);
+                    tracing::debug!("Got event from consumer: {}", event);
+                    scheduler::handle_event(sched.clone(), &delivery.data).await;
                     channel
                         .basic_ack(delivery.delivery_tag, BasicAckOptions::default())
                         .await?;

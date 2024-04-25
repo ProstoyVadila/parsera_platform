@@ -9,6 +9,7 @@ mod api;
 mod broker;
 mod config;
 mod jobs;
+mod scheduler;
 
 pub type SharedSheduler = Arc<Mutex<JobScheduler>>;
 
@@ -16,18 +17,20 @@ pub type SharedSheduler = Arc<Mutex<JobScheduler>>;
 async fn main() -> Result<()> {
     let cfg = config::Config::new();
 
-    tracing::info!("Connecting to rabbitmq");
-    let rabbit = broker::Rabbit::new(cfg.broker.clone()).await?;
-    tokio::spawn(async move {
-        rabbit.consume().await.expect("error in consumer");
-    });
-
+    
     let sched = Arc::new(Mutex::new(JobScheduler::new().await?));
-
+    
     jobs::register_initial_jobs(&mut sched.clone()).await?;
-
+    
+    tracing::info!("Connecting to rabbitmq");
     tracing::info!("Starting scheduler...");
     sched.lock().await.start().await?;
+
+    let rabbit = broker::Rabbit::new(cfg.broker.clone()).await?;
+    let sched_cloned = sched.clone();
+    tokio::spawn(async move {
+        rabbit.consume(sched_cloned).await.expect("error in consumer");
+    });
 
     api::run_server(cfg, sched).await?;
     Ok(())
