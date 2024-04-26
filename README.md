@@ -1,12 +1,19 @@
 # Web Scraper Platform
 
-## Description
-
 This is a web scraper platform based on microservices architecture. It is designed to be scalable, fast, manageable via API and work around the clock. The main idea behind this scrapper is to get a lot of persistent data from websites on a daily basis. It's not suitable for one-time scrapping.
 
 ## Architecture
 
+### Preconditions
+
+1. **I need to handle an increasing amount of users.** So my system should be scalable.
+2. **A common scraping scenario usually includes periodical scraping or pagination scraping.** So I need a scheduler to manage routine tasks and pagination destribution among scrapers.
+3. **I don't need to store all parsed data _endlessly_. When a user got it I don't need it anymore.** So I don't really need a wide-column database like Cassandra, a common relational solution is more than enough.
+4. **A user can put invalid xpaths to thier crawler**. So I should have notification and reparsing mechanisms.
+
 ### Microservices
+
+This architecture below with some changes could be useful in different scraping scenarios.
 
 ![microservices architecture](/utils/microservices_architecture.png)
 
@@ -91,3 +98,5 @@ figure out what to use (postgres, mongo, scylladb)
 Blabla
 
 ## What's Next?
+
+With increasing amount of users (>10k) the next step in evolution for that system could be migration from RabbitMQ to Kafka. It is a way more scalable and persistent message broker. At the same time our system will under more and more pressure on the database with scraped data. Read operations may experience larger latency just waiting for a free connection. A good solution would be implement Command Query Responsibility Segregation pattern (CQRS). This will make the read and write operations independent. If at some point it's clear we have to store all scraped data no matter what the best choice would be change relational database to wide-column solution. A simple model for scraped data doesn't need changes and migrations and its indexes are pretty obvious. That means we're successfuly avoiding the biggest issue with wide-columns. In our architecture the write operation significantly prevails over the read. That type of databases are the best in this scenario. And finally, wide-column databases can be scaled extremly easily comparing to others. So Cassandra or ScyllaDB could be a perfect match.
