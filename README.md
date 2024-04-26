@@ -1,15 +1,15 @@
 # Web Scraper Platform
 
-This is a web scraper platform based on microservices architecture. It is designed to be scalable, fast, manageable via API and work around the clock. The main idea behind this scrapper is to get a lot of persistent data from websites on a daily basis. It's not suitable for one-time scrapping.
+This is a web scraper platform based on microservices architecture. It is designed to be scalable, fast, manageable via API and work around the clock. The main idea behind this scraper platform is to get a lot of persistent data from websites on a daily basis. It's not suitable for one-time scrapping.
 
 ## Architecture
 
 ### Preconditions
 
 1. **I need to handle an increasing amount of users.** So my system should be scalable.
-2. **A common scraping scenario usually includes periodical scraping or pagination scraping.** So I need a scheduler to manage routine tasks and pagination destribution among scrapers.
-3. **I don't need to store all parsed data _endlessly_. When a user got it I don't need it anymore.** So I don't really need a wide-column database like Cassandra, a common relational solution is more than enough.
-4. **A user can put invalid xpaths to thier crawler**. So I should have notification and reparsing mechanisms.
+2. **A common scraping scenario usually includes periodical scraping or/and pagination scraping.** So I need a scheduler to manage routine tasks and pagination destribution among scrapers.
+3. **I don't need to store all parsed data _endlessly_. When a user download it I don't need it anymore.** So I don't really need a wide-column database like Cassandra, a common relational solution is more than enough.
+4. **A user can put invalid xpaths to thier crawler**. So I should have notification and reparsing mechanisms without sending a request again.
 
 ### Microservices
 
@@ -39,7 +39,7 @@ This architecture below with some changes could be useful in different scraping 
 
 ### RabbitMQ as a broker
 
-I tried to keep it as simple as possible. Api Gateway just pubslish event to the message broker and forgot about it. Scheduler as an Orchestrator consumes all events and can produce messages to all services. Status Manager only gets all events as well to update Frontend with actual status of task. All other service can only consume events from Scheduler and publish to it.
+I tried to keep it as simple as possible. Api Gateway just publish a new event to the message broker and forget about it. Scheduler as an Orchestrator consumes all events and can produce messages to all services. Status Manager only gets all events as well to update Frontend with actual status of task. All other services can only consume events from Scheduler and publish updates to it.
 
 ![broker architecture](/utils/rabbit_architecture.png)
 
@@ -49,11 +49,11 @@ I tried to keep it as simple as possible. Api Gateway just pubslish event to the
 
 ### Why microservices?
 
-I chose microservices architecture because it's scalable. It's easy to add new services and scale them independently. For example, if we need to crawl more sites simultaneously, we can just add more Scraper instances. If we need to add new functionality, it's not a big issue to append new services (for example, services to transform and load data to get a whole ETL process). Microservice architecture allows to separate business logic domains naturally and maintain and develop them independently. But of course everything has a cost. And the biggest issues in that approach are pretty fast growing complexity, keep up strict interface policy and maintain fault tolerance for each service.
+I chose microservices architecture because it's scalable. It's easy to add new services and scale them independently. For example, if we need to crawl more sites simultaneously, we can just add more Scraper instances. If we need to add new functionality, it's not a big issue to append new services (for example, services to transform and load data to get a whole ETL process). Microservice architecture allows to separate business logic domains naturally and maintain and develop them independently. But of course everything has a cost. And the biggest issues in that approach are pretty fast growing complexity, a requirement to keep up strict interface policy and maintain fault tolerance for each service.
 
 ### Why split crawling process into two independent services?
 
-First of all, It's different processes. Scraping or basically getting html (or json, xml as well) contains its own bunch of issues to handle. Especially if target resource's trying to avoid you to get thier data. Your scraper should look like a natural traffic. It includes changing headers and other parameters of request, using proxy and random intervals between request to the same resource. So there is no need for extracting data process to know that. And on the other hand successful request doesn't mean you get a desirable data. Invalid xpath can stand on the way. That is why it's important to have a mechanism to reextract data without resending a request.
+First of all, It's different processes. Scraping or basically getting html (or json, xml etc) contains its own bunch of issues to handle. Especially if target resource's trying to forbid you to get thier data. Your scraper should look like a natural traffic. It includes changing headers and other parameters of request, using proxy and random intervals between request to the same resource. So there is no need for extracting data process to know that. And on the other hand successful request doesn't mean you get a desirable data. Invalid xpath can stand on the way. That is why it's important to have a mechanism to reextract data without resending a request.
 
 ### Why Rust?
 
@@ -101,8 +101,10 @@ Blabla
 
 With increasing amount of users (>10k) the next step in evolution of that system could be migration from RabbitMQ to Kafka. It is a way more scalable and persistent message broker. Perhaps, it could be useful to look closer at Apache Pulsar as well.
 
-At the same time our system will under more and more pressure on the database with scraped data. Read operations may experience larger latency just trying to catch a free connection from writing processes. A good solution would be implement Command Query Responsibility Segregation pattern (CQRS). This will make the read and write operations independent.
+At the same time our system will be under more and more pressure on the database with scraped data. Read operations may experience larger latency just trying to catch a free connection because of writing processes. A good solution would be implement Command Query Responsibility Segregation pattern (CQRS). That will make the read and write operations independent.
 
-If at some point it's clear we have to store all scraped data no matter what the best choice would be change relational database to wide-column solution. A simple model for scraped data doesn't need changes and migrations and its indexes are pretty obvious. That means we're successfuly avoiding the biggest issue with wide-columns. In our architecture the write operation significantly prevails over the read. That type of databases are the best in this scenario. And finally, wide-column databases can be scaled extremly easily comparing to others. So Cassandra or ScyllaDB could be a perfect match. Add pipeline for storing old data in S3 bucket is not bad idea as well.
+If at some point it's clear we have to store all scraped data for a long time the best choice would be change relational database to wide-column solution. A simple model for scraped data doesn't need changes and migrations and its indexes are pretty obvious. That means we're successfuly avoiding the biggest issue with wide-columns. In our architecture the write operation significantly prevails over the read. That type of databases are the best in this scenario. And finally, wide-column databases can be scaled extremly easily comparing to others. So Cassandra or ScyllaDB could be a perfect match. Adding a pipeline for storing very old data in S3 bucket is not bad idea as well.
 
-Another step will be scaling and spliting Scheduler. It will aggregate tremendous amount of events and it's still a single point of failure. Zookeeper could be a good option to fix the last issue. Meanwhile Scheduler have to many actions to do. Orchestrate event flow, manage routine tasks and store events log. With some difficulties it could be separated to different services. Decision, Orchestrator and Routine Manager for example. But it is quite a big challenge and should be done with all caution. And perhaps, Pulsar can help here either by implementing all that logic into its Functions. Anyway all decisions about Scheduler should be done after a comprehensive analysis of all system in production environment.
+Another step will be scaling and spliting Scheduler. It will aggregate tremendous amount of events and it's still a single point of failure. Zookeeper could be a good option to fix the last issue. Btw Scheduler have too many actions to do. Orchestrate event flow, manage routine tasks and store events log. With some difficulties that logic could be separated to different services. Decision, Orchestrator and Routine Manager for example. But it is quite a big challenge and should be done with all caution about data consistency. And perhaps, Pulsar can help here either by containing all that logic into its Functions. Anyway all decisions about Scheduler should be done after a comprehensive analysis of all system's metrics in production environment.
+
+There is another option to make the system's life easier. It's not the best idea but it should be discussed as well. If we have a constant high load over the system Scheduler could form and send batches of scraping events instead of publishing each one independently. It will decrease pressure over the message broker and potentially speed things up because Scraper and Extractor process events concurrenty and they will not lose time handling each event in consumer. But there are many pitfalls on the way. First of all, it will increase the complexity of an already complicated Scheduler's logic. It should figure out how to form that batches properly keeping in mind that the full banch of events to scrape the same site will maximize the chances to be marked as unwanted traffic and be banned. And at the same time there is a big question how to handle situations when some events in the batch were successful and some not. So this approach creates a lot of issues that must be solved.
