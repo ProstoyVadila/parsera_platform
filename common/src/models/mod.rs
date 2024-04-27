@@ -2,7 +2,13 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
+mod notification;
+mod crawler;
 
+pub use notification::*;
+pub use crawler::*;
+
+// TODO: remove this
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 pub enum EventStatus {
     Pending,
@@ -22,6 +28,7 @@ pub enum EventStatus {
 //     pub data: String,
 // }
     
+// TODO: remove this
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AddSiteEvent {
     pub id: usize,
