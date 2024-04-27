@@ -15,21 +15,24 @@ This is a web scraper platform based on microservices architecture. It is design
 
 This architecture below with some changes could be useful in different scraping scenarios.
 
-![microservices architecture](/utils/microservices_architecture.png)
+![microservices architecture](/docs/microservices_architecture.png)
 
 ### Services
 
-- [**Api Gateway**](#api-gateway) is responsible for authentication, adding new crawlers and sites to scrapping process and getting data.
-- [**Scheduler**](#scheduler) is an orchestrator responsible for scheduling routine tasks, managing scraping state.
-- [**Status Manager**](#status-manager) is responsible for listening scheduler events, storing events logs and updating status on fronted via websockets.
+- [**Api Gateway**](#api-gateway) is responsible for authentication and api for whole backend.
+- [**Scheduler**](#scheduler) is an orchestrates routine tasks and managing scraping state.
+- [**Status Manager**](#status-manager) listens scheduler events, updating status on fronted via websockets.
 - [**Scraper**](#scraper) is responsible for getting data from websites.
-- [**Heavy Artillery**](#heavy-artillery) is responsible for getting data from websites using Selenium WebDriver when common scraper fails.
+- [**Heavy Artillery**](#heavy-artillery) scrape data from websites using Selenium WebDriver and other advanced techinques when common scraper fails.
 - [**Extractor**](#extractor) is responsible for parsing data.
-- [**Anonymizer**](#anonymizer) is responsible for managing the proxies and store them in Redis.
-- [**Database Manager**](#database-manager) is responsible for storing parsed data and its rotation.
+- [**Anonymizer**](#anonymizer) manages the proxies and store them in Redis.
+- [**Database Manager**](#database-manager) stores parsed data and its rotation.
+- [**Notification Service**](#notification-service) notifies users via email or messenger when thier tasks are done.
 - [**Broker**](#rabbitmq-as-a-broker) is responsible for asynchronous communication between services.
 
 ### Databases
+
+<!-- TODO: update this -->
 
 - **Users DB** is a PostgreSQL database stores users information.
 - **Routines DB** is a PostgreSQL database stores crawlers, routines and tasks metadata.
@@ -41,7 +44,7 @@ This architecture below with some changes could be useful in different scraping 
 
 I tried to keep it as simple as possible. Api Gateway just publish a new event to the message broker and forget about it. Scheduler as an Orchestrator consumes all events and can produce messages to all services. Status Manager only gets all events as well to update Frontend with actual status of task. All other services can only consume events from Scheduler and publish updates to it.
 
-![broker architecture](/utils/rabbit_architecture.png)
+![broker architecture](/docs/rabbit_architecture.png)
 
 [Why I chose RabbitMQ?](#why-not-kafka)
 
@@ -71,11 +74,11 @@ Blabla
 
 ### Scheduler
 
-This service is responsible for scheduling the tasks for Scrapper. It is written in Python using FastAPI framework. It sets values to RabbitMQ queue for Scrapper and stores them in Postgres. Scheduler manages routine tasks to refresh the data from the websites as well.
+blabla
 
 ### Scraper
 
-This service is responsible for scrapping the data from the websites. It is written in Rust using Tokio and Reqwest. It gets the data from RabbitMQ queue and updates it in Postgres.
+blabla
 
 ### Heavy Artillery
 
@@ -83,19 +86,23 @@ Blabla
 
 ### Extractor
 
-This service is responsible for parsing the data. It is written in Python. It parses data from websites using xpaths and stores them in db.
+blabla
 
 ### Anonymizer
 
-This service is responsible for managing the proxies for Scrapper. It is written in Go using Gin framework. It gets the proxies from resource and manages thier availability.
+blabla
 
 ### Database manager
 
-figure out what to use (postgres, mongo, scylladb)
+blabla
+
+### Notification Service
+
+bombom
 
 ### Status manager
 
-Blabla
+blabla
 
 ## What's Next?
 

@@ -15,6 +15,7 @@ serde_json = { workspace = true }
 chrono = { workspace = true }
 rand = { workspace = true }
 anyhow = { workspace = true }
+uuid = { workspace = true }
 
 common = { path = "../common" }
 
