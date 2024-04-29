@@ -6,13 +6,29 @@ use deadpool_lapin::lapin::options::{
     ExchangeDeclareOptions, QueueBindOptions, QueueDeclareOptions,
 };
 use deadpool_lapin::lapin::protocol::channel;
+use deadpool_lapin::lapin::ConnectionProperties;
 use deadpool_lapin::lapin::{types::FieldTable, BasicProperties, Channel, ExchangeKind};
-use deadpool_lapin::{Config, Manager, Pool, Runtime};
+use deadpool_lapin::{Config, Manager, Pool, PoolConfig, Runtime};
 use rand::{rngs::ThreadRng, seq::SliceRandom};
 use tokio_stream::StreamExt;
 
 use crate::config::{BrokerConfig, DbAddr};
 use crate::{scheduler, SharedSheduler};
+use crate::utils::ParseraService;
+
+// TODO: fix this 
+impl ParseraService {
+    fn routing_key<'a>(&'a self, cfg: &'a BrokerConfig) -> &str {
+        match self {
+            ParseraService::Scraper => &cfg.scraper_queue,
+            ParseraService::HeavyArtillery => &cfg.heavy_artillery_queue,
+            ParseraService::Extractor => &cfg.extractor_queue,
+            ParseraService::Notification => &cfg.notification_queue,
+            ParseraService::DatabaseManager => &cfg.db_manager_queue,
+            ParseraService::StatusManager => &cfg.status_manager_queue,
+        }
+    }
+}
 
 pub struct Rabbit {
     pub cfg: BrokerConfig,
@@ -21,11 +37,16 @@ pub struct Rabbit {
 
 impl Rabbit {
     pub async fn new(cfg: BrokerConfig) -> Result<Self> {
+        let deadpool_config = PoolConfig::new(cfg.pool_max_size.into());
+        
         let mut pool_cfg: Config = Config::default();
+        pool_cfg.pool = Some(deadpool_config);
         pool_cfg.url = Some(cfg.get_addr());
         let pool = pool_cfg.create_pool(Some(Runtime::Tokio1))?;
+    
         let rabbit = Rabbit { pool, cfg };
         rabbit.declare_all().await;
+
         Ok(rabbit)
     }
 
@@ -37,23 +58,24 @@ impl Rabbit {
 
     pub async fn declare_all(&self) {
         let channel = self.get_channel().await;
-        self.declare_exchange(channel.clone()).await;
-
-        let mut queues = self.cfg.queues_to_produce();
-        queues.push(self.cfg.queue_to_consume());
-
-        for queue in queues {
+        // Creating and binding produce exchange and queues
+        self.declare_exchange(channel.clone(), &self.cfg.produce_exchange, ExchangeKind::Topic).await; 
+        for queue in self.cfg.queues_to_produce() {
             tracing::debug!("declaring queue {}", queue);
-            self.declare_queue(channel.clone(), queue.clone()).await;
-            self.bind_queue(channel.clone(), queue).await;
+            self.declare_queue(channel.clone(), &queue).await;
+            self.bind_queue(channel.clone(), &self.cfg.produce_exchange, &queue).await;
         }
+        // Creating and binding consume cxchange and queue
+        self.declare_exchange(channel.clone(), &self.cfg.consume_exchange, ExchangeKind::Fanout).await;
+        self.declare_queue(channel.clone(), &self.cfg.queue_to_consume()).await;
+        self.bind_queue(channel, &self.cfg.consume_exchange, &self.cfg.queue_to_consume()).await
     }
 
-    pub async fn declare_exchange(&self, channel: Channel) {
+    pub async fn declare_exchange(&self, channel: Channel, exchange: &str, kind: ExchangeKind) {
         channel
             .exchange_declare(
-                &self.cfg.exchange,
-                ExchangeKind::Direct,
+                exchange,
+                kind,
                 ExchangeDeclareOptions::default(),
                 FieldTable::default(),
             )
@@ -61,10 +83,10 @@ impl Rabbit {
             .expect("cannot declare exchange");
     }
 
-    pub async fn declare_queue(&self, channel: Channel, queue: String) {
+    pub async fn declare_queue(&self, channel: Channel, queue: &str) {
         channel
             .queue_declare(
-                &queue,
+                queue,
                 QueueDeclareOptions::default(),
                 FieldTable::default(),
             )
@@ -72,12 +94,12 @@ impl Rabbit {
             .expect("cannot declare queue");
     }
 
-    pub async fn bind_queue(&self, channel: Channel, queue: String) {
+    pub async fn bind_queue(&self, channel: Channel, exchange: &str, queue: &str) {
         channel
             .queue_bind(
-                &queue,
-                &self.cfg.exchange,
-                &queue,
+                queue,
+                exchange,
+                queue,
                 QueueBindOptions::default(),
                 FieldTable::default(),
             )
@@ -85,13 +107,12 @@ impl Rabbit {
             .expect("cannot bind queue");
     }
 
-    fn choose_queue(&self) -> String {
+    fn choose_queue(&self) -> &str {
         if self.cfg.queues_to_produce().len() > 1 {
             let queues = self.cfg.queues_to_produce();
             queues
                 .choose(&mut rand::thread_rng())
                 .expect("cannot get random queue")
-                .clone()
         } else {
             let queue = self
                 .cfg
@@ -102,14 +123,15 @@ impl Rabbit {
         }
     }
 
-    pub async fn publish(&self, payload: &[u8]) {
+    pub async fn publish(&self, payload: &[u8], to: ParseraService) {
         let channel = self.get_channel().await;
-        let queue = self.choose_queue();
+        // let queue = self.choose_queue();
+        // let pubOpts = BasicPublishOptions::default()
 
         let confirm = channel
             .basic_publish(
-                &self.cfg.exchange,
-                queue.as_str(),
+                &self.cfg.produce_exchange,
+                to.routing_key(&self.cfg),
                 BasicPublishOptions::default(),
                 payload,
                 BasicProperties::default(),
@@ -137,7 +159,7 @@ impl Rabbit {
                     let event = str::from_utf8(&delivery.data)
                         .expect("error converting message from consumer");
                     tracing::debug!("Got event from consumer: {}", event);
-                    scheduler::handle_event(sched.clone(), &delivery.data).await;
+                    scheduler::handle_event(self, sched.clone(), &delivery.data).await;
                     channel
                         .basic_ack(delivery.delivery_tag, BasicAckOptions::default())
                         .await?;

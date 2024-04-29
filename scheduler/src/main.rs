@@ -10,6 +10,7 @@ mod broker;
 mod config;
 mod jobs;
 mod scheduler;
+mod utils;
 
 pub type SharedSheduler = Arc<Mutex<JobScheduler>>;
 

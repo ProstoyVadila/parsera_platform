@@ -8,6 +8,8 @@ use envconfig::Envconfig;
 use tracing;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+use crate::utils::ParseraService;
+
 pub trait DbAddr {
     fn get_addr(&self) -> String;
 }
@@ -47,20 +49,46 @@ pub struct BrokerConfig {
     pub password: String,
     #[envconfig(from = "RABBITMQ_VHOST")]
     pub vhost: String,
-    #[envconfig(from = "RABBITMQ_EXCHANGE")]
-    pub exchange: String,
-    // #[envconfig(from = "RABBITMQ_QUEUE")]
-    // pub queues: Vec<String>,
+    #[envconfig(from = "RABBITMQ_POOL_MAX_SIZE", default = "16")]
+    pub pool_max_size: u16,
+    #[envconfig(from = "RABBITMQ_POOL_TIMEOUT", default = "2")]
+    pub pool_timeout: u16,
+    #[envconfig(from = "RABBITMQ_CONSUME_EXCHANGE", default = "to_scheduler")]
+    pub consume_exchange: String,
+    #[envconfig(from = "RABBITMQ_PRODUCE_EXCHANGE", default = "from_scheduler")]
+    pub produce_exchange: String,
+    #[envconfig(from = "RABBITMQ_CONSUME_QUEUE", default = "to_scheduler")]
+    pub consume_queue: String,
+    #[envconfig(from = "RABBITMQ_SCRAPER_QUEUE")]
+    pub scraper_queue: String,
+    #[envconfig(from = "RABBITMQ_HEAVY_ARTILLERY_QUEUE")]
+    pub heavy_artillery_queue: String,
+    #[envconfig(from = "RABBITMQ_EXTRACTOR_QUEUE")]
+    pub extractor_queue: String,
+    #[envconfig(from = "RABBITMQ_NOTIFICATION_QUEUE")]
+    pub notification_queue: String,
+    #[envconfig(from = "RABBITMQ_DB_MANAGER_QUEUE")]
+    pub db_manager_queue: String,
+    #[envconfig(from = "RABBITMQ_STATUS_MANAGER_QUEUE")]
+    pub status_manager_queue: String,
 }
 
 impl BrokerConfig {
     // TODO: remove this mock
-    pub fn queues_to_produce(&self) -> Vec<String> {
-        vec!["queue1".into(), "queue2".into()]
+    pub fn queues_to_produce(&self) -> Vec<&str> {
+        // self.produce_queues.split(',').map(|q| q.to_string()).collect()
+        vec![
+            &self.scraper_queue,
+            &self.heavy_artillery_queue,
+            &self.extractor_queue,
+            &self.notification_queue,
+            &self.db_manager_queue,
+            &self.status_manager_queue,
+        ]
     }
 
     pub fn queue_to_consume(&self) -> String {
-        "queue".into()
+        self.consume_queue.clone()
     }
 }
 
