@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 use crate::models::notification::NotificationOptions;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum Priority {
     Top,
     High,
@@ -14,45 +14,9 @@ pub enum Priority {
     Low,
 }
 
-// TODO Rewrite
-#[derive(Debug, Serialize, Deserialize)]
-pub enum Status {
-    RegisterPending,
-    Registered,
-    RegisterFailed,
-    ScrapingPending,
-    Scraped,
-    ScrapingFailed,
-    ExtractingPending,
-    Extracted,
-    ExtractingFailed,
-    NotifyPending,
-    Notified,
-    NotifyFailed,
-    Done,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub enum SchedulerCommand {
-    RegisterCrawler(CommandStatus),
-    ScrapePage(CommandStatus),
-    ExtractPage(CommandStatus),
-    StorePage(CommandStatus),
-    NotifyUser(CommandStatus),
-    Sleep(CommandStatus),   // TODO: think about it
-}
-
-
-#[derive(Debug, Serialize, Deserialize)]
-pub enum CommandStatus {
-    Pending,
-    Done,
-    Failed,
-}
-
 
 // TODO: refactor
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Crawler {
     pub id: Uuid,
     pub name: String,
@@ -67,7 +31,7 @@ pub struct Crawler {
 }
 
 // TODO: refactor
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Site {
     pub id: Uuid,
     pub domain: String,
@@ -78,7 +42,7 @@ pub struct Site {
 }
 
 // TODO: refactor
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Page {
     pub id: Uuid,
     pub crawler_id: Uuid,
@@ -87,7 +51,6 @@ pub struct Page {
     pub domain: String,
     pub is_pagination: bool,
     pub times_reparsed: u32,
-    pub status: Status,
     pub priority: Priority,
     pub notification: NotificationOptions,
     pub xpaths: HashMap<String, String>,

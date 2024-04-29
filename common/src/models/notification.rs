@@ -1,7 +1,7 @@
 use serde::{Serialize, Deserialize};
 
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum NotificationLevel {
     JobsDone,       // When job's done, failed, stats
     JobsFailed,     // When failed and global stats
@@ -9,7 +9,7 @@ pub enum NotificationLevel {
     DoNotDisturb,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum NotifyEvery {
     Day,
     Week,
@@ -17,14 +17,14 @@ pub enum NotifyEvery {
 }
 
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum NotifyVia {
     Email(String),  // email
     Telegram(String),   //telegram user id ?
 }
 
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct NotificationOptions {
     pub level: NotificationLevel,
     pub via: Vec<NotifyVia>,

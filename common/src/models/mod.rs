@@ -4,9 +4,11 @@ use serde::{Deserialize, Serialize};
 
 mod notification;
 mod crawler;
+mod scheduler;
 
 pub use notification::*;
 pub use crawler::*;
+pub use scheduler::*;
 
 // TODO: remove this
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
