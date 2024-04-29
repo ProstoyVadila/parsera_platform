@@ -19,8 +19,8 @@ pub enum NotifyEvery {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum NotifyVia {
-    Email(String),
-    Telegram(String),
+    Email(String),  // email
+    Telegram(String),   //telegram user id ?
 }
 
 
