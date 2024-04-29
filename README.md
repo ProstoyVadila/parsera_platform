@@ -47,6 +47,9 @@ I tried to keep it as simple as possible. Api Gateway just publishes a new event
 
 ![broker architecture](/docs/rabbit_architecture.png)
 
+I chose a Send/Receive communication pattern. It's gonna cost the system to have an additional traffic compared to Pub/Sub pattern but it simplifies message routing making it straightforward. It seems more reasonable when a Scheduler business logic could be evolved or changed. And this is pretty common for a scraping service which should be agile enough with its attempts to get necessary data from a target source.
+It have to implement different strategies to finally reach it goal. Those strategies usually aren't clear from a developing stage. That's why it's important to hava an option to add them easily later.
+
 [Why I chose RabbitMQ?](#why-not-kafka)
 
 ## Whys
