@@ -3,9 +3,17 @@ use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum NotificationLevel {
-    JobsDone,       // When job's done or failed
-    JobsFailed,     // When failed only
+    JobsDone,       // When job's done, failed, stats
+    JobsFailed,     // When failed and global stats
+    Statistics,     // stats only
     DoNotDisturb,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum NotifyEvery {
+    Day,
+    Week,
+    Month,
 }
 
 
@@ -18,6 +26,7 @@ pub enum NotifyVia {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NotificationOptions {
-    pub via: Vec<NotifyVia>,
     pub level: NotificationLevel,
+    pub via: Vec<NotifyVia>,
+    pub every: Option<NotifyEvery>,
 }

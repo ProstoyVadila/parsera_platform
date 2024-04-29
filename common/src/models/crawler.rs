@@ -14,6 +14,7 @@ pub enum Priority {
     Low,
 }
 
+// TODO Rewrite
 #[derive(Debug, Serialize, Deserialize)]
 pub enum Status {
     RegisterPending,
@@ -32,6 +33,26 @@ pub enum Status {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub enum SchedulerCommand {
+    RegisterCrawler(CommandStatus),
+    ScrapePage(CommandStatus),
+    ExtractPage(CommandStatus),
+    StorePage(CommandStatus),
+    NotifyUser(CommandStatus),
+    Sleep(CommandStatus),   // TODO: think about it
+}
+
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum CommandStatus {
+    Pending,
+    Done,
+    Failed,
+}
+
+
+// TODO: refactor
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Crawler {
     pub id: Uuid,
     pub name: String,
@@ -45,6 +66,7 @@ pub struct Crawler {
     pub meta: Option<String>,
 }
 
+// TODO: refactor
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Site {
     pub id: Uuid,
@@ -55,6 +77,7 @@ pub struct Site {
     pub meta: Option<String>,
 }
 
+// TODO: refactor
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Page {
     pub id: Uuid,
