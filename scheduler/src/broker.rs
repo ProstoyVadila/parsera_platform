@@ -19,7 +19,6 @@ use crate::config::{BrokerConfig, DbAddr};
 use crate::{scheduler, SharedSheduler};
 use crate::utils::ParseraService;
 
-// TODO: fix this 
 impl ParseraService {
     fn routing_key<'a>(&'a self, cfg: &'a BrokerConfig) -> &str {
         match self {
@@ -83,7 +82,7 @@ impl Rabbit {
                 FieldTable::default(),
             )
             .await
-            .expect("cannot declare exchange");
+            .expect("cannot declare an exchange");
     }
 
     pub async fn declare_queue(&self, channel: Channel, queue: &str) {
@@ -94,7 +93,7 @@ impl Rabbit {
                 FieldTable::default(),
             )
             .await
-            .expect("cannot declare queue");
+            .expect("cannot declare a queue");
     }
 
     pub async fn bind_queue(&self, channel: Channel, exchange: &str, queue: &str) {
@@ -107,7 +106,7 @@ impl Rabbit {
                 FieldTable::default(),
             )
             .await
-            .expect("cannot bind queue");
+            .expect("cannot bind a queue");
     }
 
     fn choose_queue(&self) -> &str {
@@ -115,7 +114,7 @@ impl Rabbit {
             let queues = self.cfg.queues_to_produce();
             queues
                 .choose(&mut rand::thread_rng())
-                .expect("cannot get random queue")
+                .expect("cannot get a random queue")
         } else {
             let queue = self
                 .cfg
@@ -156,7 +155,7 @@ impl Rabbit {
             channel
                 .basic_consume(
                     queue,
-                    "consumer tag",
+                    "scheduler",
                     BasicConsumeOptions::default(),
                     FieldTable::default(),
                 )
@@ -170,12 +169,13 @@ impl Rabbit {
             match delivery {
                 Ok(delivery) => {
                     scheduler::handle_event(self, sched.clone(), &delivery.data).await;
+                    // TODO: figure out this error handling
                     channel
                         .basic_ack(delivery.delivery_tag, BasicAckOptions::default())
                         .await?;
                 }
                 Err(err) => {
-                    tracing::error!("Error caught in consumer: {}", err);
+                    tracing::error!("error caught in consumer: {}", err);
                 }
             }
         }
