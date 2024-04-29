@@ -3,7 +3,10 @@ use actix_web::{get, post, web, App, HttpServer};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use tokio_cron_scheduler::Job;
+use tracing::event;
 use tracing_actix_web::{RequestId, TracingLogger};
+
+use common::models::{CommandStatus, Crawler, EventProtocol, EventProtocolData, MockCrawler, SchedulerCommand};
 
 use crate::config::Config;
 use crate::SharedSheduler;
@@ -54,6 +57,15 @@ async fn get_healthcheck() -> &'static str {
     "ok"
 }
 
+#[get("/test")]
+async fn get_test(event: web::Json<EventProtocol>) -> &'static str {
+    match &event.data {
+        EventProtocolData::External(crawler) => println!("External: {:?}", crawler),
+        EventProtocolData::Internal(page) => println!("Internal: {:?}", page),
+    };
+    "ok"
+}
+
 pub async fn run_server(cfg: Config, sched: SharedSheduler) -> Result<()> {
     tracing::info!("Starting web server on {}", cfg.get_socket_addr());
     HttpServer::new(move || {
@@ -62,6 +74,7 @@ pub async fn run_server(cfg: Config, sched: SharedSheduler) -> Result<()> {
             .app_data(web::Data::new(sched.clone()))
             .service(add_routine)
             .service(get_healthcheck)
+            .service(get_test)
     })
     .bind(cfg.get_socket_addr())?
     .run()
