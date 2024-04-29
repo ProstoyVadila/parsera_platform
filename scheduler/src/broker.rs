@@ -1,11 +1,12 @@
 use std::str;
 
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use deadpool_lapin::lapin::options::{
     BasicAckOptions, BasicConsumeOptions, BasicPublishOptions, ExchangeBindOptions,
     ExchangeDeclareOptions, QueueBindOptions, QueueDeclareOptions,
 };
 use deadpool_lapin::lapin::protocol::channel;
+use deadpool_lapin::lapin::publisher_confirm::PublisherConfirm;
 use deadpool_lapin::lapin::ConnectionProperties;
 use deadpool_lapin::lapin::{types::FieldTable, BasicProperties, Channel, ExchangeKind};
 use deadpool_lapin::{Config, Manager, Pool, PoolConfig, Runtime};
@@ -53,7 +54,6 @@ impl Rabbit {
     }
 
     pub async fn get_channel(&self) -> Result<Channel> {
-        // TODO: remove expect (add result return)
         let conn = retry!("get_rabbit_conn", self.pool.get().await, 10, 0.2)?;
         let channel = retry!("get_rabbit_channel", conn.create_channel().await, 10, 0.2)?;
         Ok(channel)
@@ -126,22 +126,24 @@ impl Rabbit {
         }
     }
 
-    pub async fn publish(&self, payload: &[u8], to: ParseraService) -> Result<()> {
+    pub async fn publish(&self, payload: &[u8], to: ParseraService) -> Result<PublisherConfirm> {
         let channel = self.get_channel().await?;
-        // let queue = self.choose_queue();
-        // let pubOpts = BasicPublishOptions::default()
 
-        let confirm = channel
-            .basic_publish(
-                &self.cfg.produce_exchange,
-                to.routing_key(&self.cfg),
-                BasicPublishOptions::default(),
-                payload,
-                BasicProperties::default(),
-            )
-            .await
-            .expect("cannot send message to the queue");
-        Ok(())
+        increasing_retry!(
+            "publish",
+            channel
+                .basic_publish(
+                    &self.cfg.produce_exchange,
+                    to.routing_key(&self.cfg),
+                    BasicPublishOptions::default(),
+                    payload,
+                    BasicProperties::default(),
+                )
+                .await,
+            8,
+            0.1,
+            0.4
+            ).map_err(|err| anyhow!(err))
     }
 
     pub async fn consume(&self, sched: SharedSheduler) -> Result<()> {
@@ -149,14 +151,20 @@ impl Rabbit {
         tracing::info!("consuming from queue {}", queue);
         let channel = self.get_channel().await.expect("cannot get a rabbit channel for consumer");
 
-        let mut consumer = channel
-            .basic_consume(
-                queue,
-                "consumer tag",
-                BasicConsumeOptions::default(),
-                FieldTable::default(),
-            )
-            .await?;
+        let mut consumer = increasing_retry!(
+            "basic_consume",
+            channel
+                .basic_consume(
+                    queue,
+                    "consumer tag",
+                    BasicConsumeOptions::default(),
+                    FieldTable::default(),
+                )
+                .await,
+            30,
+            1.0,
+            2.0
+        ).expect("cannot get a consumer");
 
         while let Some(delivery) = consumer.next().await {
             match delivery {

@@ -1,3 +1,4 @@
+use deadpool_lapin::lapin::publisher_confirm::PublisherConfirm;
 use serde::{Serialize, Deserialize};
 use tokio_cron_scheduler::Job;
 
@@ -38,7 +39,13 @@ pub async fn handle_event(broker: &Rabbit, sched: SharedSheduler, event: &[u8]) 
         .expect("cannot register a a new job");
 
     tracing::debug!("publishing command to queue");
-    broker.publish(event, crate::utils::ParseraService::Notification).await;
+    let confirm = match broker.publish(event, crate::utils::ParseraService::Notification).await {
+        Ok(c) => c,
+        Err(err) => {
+            tracing::error!("cannot send an event to queue: {}", err);
+            return;
+        }
+    };
 }
 
 pub async fn handle_msg(broker: &Rabbit, sched: SharedSheduler, msg: &[u8]) {
@@ -53,14 +60,7 @@ pub async fn handle_msg(broker: &Rabbit, sched: SharedSheduler, msg: &[u8]) {
 
     let action = event.action.clone();
     match action {
-        SchedulerCommand::RegisterCrawler(_) => {
-            if let Some(ref crawler) = event.crawler {
-                // TODO: add register crawler
-                handle_register_crawler(broker, event).await;
-            } else {
-                tracing::error!("there is no new crawler for register command")
-            }
-        },
+        SchedulerCommand::RegisterCrawler(_) => handle_register_crawler(broker, event).await,
         SchedulerCommand::ScrapePage(status) => handle_scrape(broker, status, event).await,
         SchedulerCommand::ExtractPage(status) => handle_extraction(broker, status, event).await,
         SchedulerCommand::StorePage(status) => handle_store(broker, status, event).await,
