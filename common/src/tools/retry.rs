@@ -1,7 +1,8 @@
 
-/// macro function for retry n times with m sleep duration of async function.
+/// macro function for retry n times with m sleep duration for async function.
+/// Args: func_name: String, func: any async func, count: usize, interval: f32
 #[macro_export]
-macro_rules! retry_on_err {
+macro_rules! retry {
     ($func_name:expr, $func:expr, $count:expr, $interval:expr) => {{
         let mut retries = 0;
         let result = loop {
@@ -33,8 +34,11 @@ macro_rules! retry_on_err {
     };
 }
 
+/// macro function for increasing retry n times with min sleep duration and step duration between increasing tries for async function.
+/// Maxim sleep time is ~20s.
+/// Args: func_name: String, func: any async func, count: usize, sleep_min: f32, step: f32
 #[macro_export]
-macro_rules! retry_inc_on_err {
+macro_rules! increasing_retry {
     ($func_name:expr, $func:expr, $count:expr, $sleep_min:expr, $step:expr) => {{
         use rand::Rng;
         let mut retries = 0;
@@ -79,5 +83,68 @@ macro_rules! retry_inc_on_err {
     };
 }
 
-pub use retry_on_err;
-pub use retry_inc_on_err;
+/// macro function for infinite retry.
+/// Args: func_name: String, func: any async func, interval: f32.
+#[macro_export]
+macro_rules! infinite_retry {
+    ($func_name:expr, $func:expr, $interval:expr) => {{
+        let result = loop {
+            let result = $func;
+            if result.is_ok {
+                break result;
+            } else {
+                tracing::warn!(
+                    "infinitely retrying {} function after {} seconds...", 
+                    $func_name, 
+                    $interval
+                );
+                let retry_in = std::time::Duration::from_secs_f32($interval);
+                tokio::time::sleep(retry_in).await
+            }
+        };
+        result
+    }};
+    ($func_name:expr, $func:expr) => {
+        infinite_retry!($func_name, $func)
+    }
+}
+
+/// macro function like retry but using thread::sleep().
+/// Args: func_name: String, func: any func, interval: f32. 
+#[macro_export]
+macro_rules! block_retry {
+    ($func_name:expr, $func:expr, $count:expr, $interval:expr) => {{
+        let mut retries = 0;
+        let result = loop {
+            let result = $func;
+            if result.is_ok() {
+                break result;
+            } else if retries >= $count {
+                break result;
+            } else {
+                retries += 1;
+                tracing::warn!(
+                    "{}/{} retrying {} function after {} seconds...", 
+                    retries, 
+                    $count, 
+                    $func_name, 
+                    $interval
+                );
+                let retry_in = std::time::Duration::from_secs_f32($interval);
+                std::thread::sleep(retry_in);
+            }
+        };
+        result
+    }};
+    ($func_name:expr, $func:expr, $count:expr) => {
+        retry_on_err!($func_name, $func, $count, 0.4)
+    };
+    ($func_name:expr, $func:expr) => {
+        retry_on_err!($func_name, $func, 10, 0.4)
+    };
+}
+
+pub use retry;
+pub use increasing_retry;
+pub use infinite_retry;
+pub use block_retry;
