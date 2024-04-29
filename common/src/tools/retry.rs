@@ -13,7 +13,7 @@ macro_rules! retry {
                 break result;
             } else {
                 retries += 1;
-                tracing::warn!(
+                tracing::error!(
                     "{}/{} retrying {} function after {} seconds...", 
                     retries, 
                     $count, 
@@ -27,10 +27,10 @@ macro_rules! retry {
         result
     }};
     ($func_name:expr, $func:expr, $count:expr) => {
-        retry_on_err!($func_name, $func, $count, 0.4)
+        retry!($func_name, $func, $count, 0.4)
     };
     ($func_name:expr, $func:expr) => {
-        retry_on_err!($func_name, $func, 10, 0.4)
+        retry!($func_name, $func, 10, 0.4)
     };
 }
 
@@ -60,7 +60,7 @@ macro_rules! increasing_retry {
             } else {
                 retries += 1;
                 retry_in = retry_in.mul_f32(factor).min(limit_max).max(limit_min) + jitter();
-                tracing::warn!(
+                tracing::error!(
                     "{}/{} retrying {} function after {:?} seconds...", 
                     retries, 
                     $count, 
@@ -73,13 +73,13 @@ macro_rules! increasing_retry {
         result
     }};
     ($func_name:expr, $func:expr, $count:expr, $sleep_min:expr) => {
-        retry_inc_on_err!($func_name, $func, $count, $sleep_min, 0.3)
+        increasing_retry!($func_name, $func, $count, $sleep_min, 0.3)
     };
     ($func_name:expr, $func:expr, $count:expr) => {
-        retry_inc_on_err!($func_name, $func, $count, 0.8, 0.3)
+        increasing_retry!($func_name, $func, $count, 0.8, 0.3)
     };
     ($func_name:expr, $func:expr) => {
-        retry_inc_on_err!($func_name, $func, 10, 0.8, 0.3)
+        increasing_retry!($func_name, $func, 10, 0.8, 0.3)
     };
 }
 
@@ -93,7 +93,7 @@ macro_rules! infinite_retry {
             if result.is_ok {
                 break result;
             } else {
-                tracing::warn!(
+                tracing::error!(
                     "infinitely retrying {} function after {} seconds...", 
                     $func_name, 
                     $interval
@@ -123,7 +123,7 @@ macro_rules! block_retry {
                 break result;
             } else {
                 retries += 1;
-                tracing::warn!(
+                tracing::error!(
                     "{}/{} retrying {} function after {} seconds...", 
                     retries, 
                     $count, 
@@ -137,10 +137,10 @@ macro_rules! block_retry {
         result
     }};
     ($func_name:expr, $func:expr, $count:expr) => {
-        retry_on_err!($func_name, $func, $count, 0.4)
+        block_retry!($func_name, $func, $count, 0.4)
     };
     ($func_name:expr, $func:expr) => {
-        retry_on_err!($func_name, $func, 10, 0.4)
+        block_retry!($func_name, $func, 10, 0.4)
     };
 }
 
