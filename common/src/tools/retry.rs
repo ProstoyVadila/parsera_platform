@@ -105,7 +105,7 @@ macro_rules! infinite_retry {
         result
     }};
     ($func_name:expr, $func:expr) => {
-        infinite_retry!($func_name, $func)
+        infinite_retry!($func_name, $func, 0.1)
     }
 }
 
