@@ -90,7 +90,7 @@ macro_rules! infinite_retry {
     ($func_name:expr, $func:expr, $interval:expr) => {{
         let result = loop {
             let result = $func;
-            if result.is_ok {
+            if result.is_ok() {
                 break result;
             } else {
                 tracing::error!(
