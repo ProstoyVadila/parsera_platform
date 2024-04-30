@@ -13,7 +13,7 @@ use deadpool_lapin::{Config, Manager, Pool, PoolConfig, Runtime};
 use rand::{rngs::ThreadRng, seq::SliceRandom};
 use tokio_stream::StreamExt;
 
-use common::{retry, increasing_retry};
+use common::{retry, increasing_retry, infinite_retry};
 
 use crate::config::{BrokerConfig, DbAddr};
 use crate::{scheduler, SharedSheduler};
@@ -150,7 +150,7 @@ impl Rabbit {
         tracing::info!("consuming from queue {}", queue);
         let channel = self.get_channel().await.expect("cannot get a rabbit channel for consumer");
 
-        let mut consumer = increasing_retry!(
+        let mut consumer = infinite_retry!(
             "basic_consume",
             channel
                 .basic_consume(
@@ -160,19 +160,17 @@ impl Rabbit {
                     FieldTable::default(),
                 )
                 .await,
-            30,
-            1.0,
-            2.0
+            1.0
         ).expect("cannot get a consumer");
 
         while let Some(delivery) = consumer.next().await {
             match delivery {
                 Ok(delivery) => {
                     scheduler::handle_event(self, sched.clone(), &delivery.data).await;
-                    // TODO: figure out this error handling
+                    // TODO: error handling
                     channel
                         .basic_ack(delivery.delivery_tag, BasicAckOptions::default())
-                        .await?;
+                        .await;
                 }
                 Err(err) => {
                     tracing::error!("error caught in consumer: {}", err);
