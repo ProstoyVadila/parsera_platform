@@ -1,4 +1,12 @@
-README.md
 .gitignore
 Dockerfile
 target/
+anonymizer/
+api_backend/
+api_gateway/
+scheduler/
+extractor/
+docs/
+LICENSE
+*.md
+Cargo.lock
