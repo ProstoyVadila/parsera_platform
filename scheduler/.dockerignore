@@ -1,0 +1,15 @@
+target/
+anonymizer/
+api_backend/
+api_gateway/
+scrapper/
+extractor/
+.vscode/
+docs/
+LICENSE
+*.yaml
+*.md
+Cargo.lock
+.gitignore
+Dockerfile
+Makefile

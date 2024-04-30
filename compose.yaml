@@ -123,3 +123,21 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: scrapped_data
       LOG_LEVEL: DEBUG
+  
+  # rocket_gateway:
+  #   build:
+  #     context: rocket_gateway/
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     ports:
+  #      - "8000":"8000"
+  #   restart: always
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     rabbit:
+  #       condition: service_healty
+  #     redis:
+  #       condition: service_healty
+  #   environment:
+  #     ...
