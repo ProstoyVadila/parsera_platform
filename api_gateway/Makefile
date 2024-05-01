@@ -1,4 +1,4 @@
 run:
-	@RUST_LOG=debug LOCAL_RUN=true RUST_BACKTRACE=1 cargo run
+	@LOCAL_RUN=true cargo run
 
 .PHONY: run

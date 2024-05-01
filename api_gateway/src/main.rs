@@ -1,29 +1,41 @@
+// #![allow(dead_code, unused)]
+#[macro_use] extern crate rocket;
 
+use std::env;
 
-mod config;
-mod app;
-mod routes;
+use rocket_db_pools::{deadpool_redis, sqlx, Database};
+
+use broker::Rabbit;
+
 mod api;
-mod database;
-mod rabbit;
-mod utils;
-mod redis;
+mod broker;
 
 
-#[tokio::main]
-async fn main() {
-    let cfg = config::Config::new();
-    cfg.set_tracing();
+#[derive(Database)]
+#[database("redis")]
+struct Redis(deadpool_redis::Pool);
 
-    tracing::info!("Starting api gateway service...");
-    let app = app::App::new(cfg).await;    // run it with hyper
+#[derive(Database)]
+#[database("postgres")]
+struct Postgres(sqlx::PgPool);
 
-    tracing::info!("listening on {}", app.config.get_socket_addr());
-    let listener = tokio::net::TcpListener::bind(app.config.get_socket_addr())
-        .await
-        .unwrap();
-    axum::serve(listener, app.router)
-        .with_graceful_shutdown(utils::graceful_shutdown())
-        .await.unwrap();
 
+#[rocket::main]
+async fn main() -> Result<(), rocket::Error> {
+    if env::var("LOCAL_RUN").is_ok_and(|local| local == "true") {
+        use dotenv::dotenv;
+        dotenv().ok();
+    }
+
+    let rabbit = Rabbit::new().await;
+    
+    let _ = rocket::build()
+        .attach(Redis::init())
+        .attach(Postgres::init())
+        .mount("/", api::get_routes())
+        .manage(rabbit)
+        .launch()
+        .await?;
+
+    Ok(())
 }

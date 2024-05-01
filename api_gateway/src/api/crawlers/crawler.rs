@@ -1,65 +1,14 @@
+#![allow(dead_code,unused)]
 use std::collections::HashMap;
-use std::sync::Arc;
 
-use axum::extract::{FromRef, FromRequest};
-use axum::{extract::State, Extension, Json};
-use axum::debug_handler;
-use serde::{Deserialize, Serialize};
+use rocket::serde::{Serialize, Deserialize, json::Json};
 
-use common::models::{EventStatus, AddSiteEvent};
+use common::models::{AddSiteEvent, EventStatus};
 
-use crate::rabbit::RabbitMQ;
-use crate::app::SharedState;
-use crate::redis::{RedisConnection, RedisConnectionPool};
-
-
-// #[derive(Deserialize)]
-// pub struct CrawlerPayloadIn {
-//     pub user_id: String,
-//     pub crawler_id: String,
-// }
-
-// #[derive(Serialize)]
-// pub struct CrawlerPayloadOut {
-//     pub user_id: String,
-//     pub crawler_id: String,
-//     pub options: String,
-// }
-
-// pub async fn get_crawlers(Json(payload): Json<CrawlerPayloadIn>) -> Json<CrawlerPayloadOut> {
-//     let out = CrawlerPayloadOut {
-//         user_id: payload.user_id,
-//         crawler_id: payload.crawler_id,
-//         options: "damn.".to_string(),
-//     };
-//     Json(out)
-// }
-
-
-// pub struct CreateCrawlerPayloadIn {
-
-// }
-
-// pub async fn create_crawler(
-//     Json(payload): Json<CrawlerPayloadIn>,
-//     State(state): State<SharedState>,
-// ) -> Json<CrawlerPayloadOut> {
-    
-//     let out = CrawlerPayloadOut {
-//         user_id: payload.user_id,
-//         crawler_id: payload.crawler_id,
-//         options: "registered".to_string(),
-//     };
-
-//     let task = serde_json::to_string(&out).expect("task serialized");
-//     let confirm = state.rabbit.publish(task.as_bytes()).await;
-//     // let rabbit = &state.
-
-//     Json(out)
-// }
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct AddSitePayloadIn {
+// GET
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct GetCrawlerIn {
     pub url: String,
     pub user_id: usize,
     pub is_pagination: bool,
@@ -68,56 +17,113 @@ pub struct AddSitePayloadIn {
 }
 
 #[derive(Debug, Serialize)]
-pub struct AddSitePayloadOut {
-    pub params: AddSitePayloadIn,
+#[serde(crate = "rocket::serde")]
+pub struct GetCrawlerOut {
+    pub params: GetCrawlerIn,
     pub event_id: usize,
     pub status: EventStatus,
-    
 }
 
-pub async fn add_site(
-    State(state): State<SharedState>,
-    Json(payload): Json<AddSitePayloadIn>, 
-) -> Json<AddSitePayloadOut> {
+#[get("/crawler", format = "json", data = "<payload>")]
+pub async fn get_crawler(payload: Json<GetCrawlerIn>) -> Json<GetCrawlerOut> {
+    todo!("impl")
+}
 
-    let event = AddSiteEvent {
-        id: 1,
-        url: payload.url.clone(),
-        user_id: payload.user_id,
-        is_pagination: payload.is_pagination,
-        refresh_interval: payload.refresh_interval,
-        xpaths: payload.xpaths.clone(),
-        status: EventStatus::Pending,
-    };
-    let event_json = match serde_json::to_string(&event) {
-        Ok(json) => json,
-        Err(err) => {
-            tracing::error!("cannot serialize add site event: {}", err);
-            return Json(AddSitePayloadOut{
-                params: payload.clone(),
-                event_id: event.id,
-                status: EventStatus::RegisterError,
-            });
-        }
-    };
 
-    let domain = "parsera".to_string();
-    let _ = match state.rabbit.publish(event_json.as_bytes()).await {
-        Ok(ok) => ok,
-        Err(err) => {
-            tracing::error!("cannot publish message: {}", err);
-            return Json(AddSitePayloadOut{
-                params: payload.clone(),
-                event_id: event.id,
-                status: EventStatus::RegisterError,
-            }); 
-        }
-    };
+// CREATE
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct AddCrawlerIn {
+    pub url: String,
+    pub user_id: usize,
+    pub is_pagination: bool,
+    pub refresh_interval: usize,
+    pub xpaths: HashMap<String, String>,
+}
 
-    let out = AddSitePayloadOut {
-        event_id: event.id,
-        params: payload,
-        status: event.status,
-    };
-    Json(out)
+#[derive(Debug, Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct AddCrawlerOut {
+    pub params: AddCrawlerIn,
+    pub event_id: usize,
+    pub status: EventStatus,
+}
+
+#[post("/crawler", format = "json", data = "<payload>")]
+pub async fn add_crawler(payload: Json<AddCrawlerIn>) -> Json<AddCrawlerOut> {
+    todo!("impl")
+}
+
+
+// DELETE
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct DeleteCrawlerIn {
+    pub url: String,
+    pub user_id: usize,
+    pub is_pagination: bool,
+    pub refresh_interval: usize,
+    pub xpaths: HashMap<String, String>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct DeleteCrawlerOut {
+    pub params: DeleteCrawlerIn,
+    pub event_id: usize,
+    pub status: EventStatus,
+}
+
+#[delete("/crawler", format = "json", data = "<payload>")]
+pub async fn delete_crawler(payload: Json<DeleteCrawlerIn>) -> Json<DeleteCrawlerOut> {
+    todo!("impl")
+}
+
+
+// UPDATE
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct UpdateCrawlerIn {
+    pub url: String,
+    pub user_id: usize,
+    pub is_pagination: bool,
+    pub refresh_interval: usize,
+    pub xpaths: HashMap<String, String>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct UpdateCrawlerOut {
+    pub params: UpdateCrawlerIn,
+    pub event_id: usize,
+    pub status: EventStatus,
+}
+
+#[put("/crawler", format = "json", data = "<payload>")]
+pub async fn update_crawler(payload: Json<UpdateCrawlerIn>) -> Json<UpdateCrawlerOut> {
+    todo!("impl")
+}
+
+// GET ALL
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct GetCrawlersIn {
+    pub url: String,
+    pub user_id: usize,
+    pub is_pagination: bool,
+    pub refresh_interval: usize,
+    pub xpaths: HashMap<String, String>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct GetCrawlersOut {
+    pub params: GetCrawlerIn,
+    pub event_id: usize,
+    pub status: EventStatus,
+}
+
+#[get("/crawlers", format = "json", data = "<payload>")]
+pub async fn get_crawlers(payload: Json<GetCrawlersIn>) -> Json<GetCrawlersOut> {
+    todo!("impl")
 }
