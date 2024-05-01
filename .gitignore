@@ -6,7 +6,8 @@
 
 # global
 *.env
-test-compose.yaml
+*.yaml
+!compose.yaml
 
 # configs
 

@@ -21,17 +21,17 @@ async fn main() -> Result<()> {
     let cfg = config::Config::new();
 
     
-    let metadata_storage = Box::new(PostgresMetadataStore::default());
-    let notification_storage = Box::new(PostgresNotificationStore::default());
-    let simple_job_code = Box::new(SimpleJobCode::default());
-    let simple_notification_code = Box::new(SimpleNotificationCode::default());
+    // let metadata_storage = Box::new(PostgresMetadataStore::default());
+    // let notification_storage = Box::new(PostgresNotificationStore::default());
+    // let simple_job_code = Box::new(SimpleJobCode::default());
+    // let simple_notification_code = Box::new(SimpleNotificationCode::default());
 
-    let mut job_sched = JobScheduler::new_with_storage_and_code(
-        metadata_storage,
-        notification_storage,
-        simple_job_code,
-        simple_notification_code
-    ).await?;
+    // let mut job_sched = JobScheduler::new_with_storage_and_code(
+    //     metadata_storage,
+    //     notification_storage,
+    //     simple_job_code,
+    //     simple_notification_code
+    // ).await?;
 
     // job_sched.shutdown_on_ctrl_c();
     // job_sched.set_shutdown_handler(Box::new(|| {
@@ -39,9 +39,10 @@ async fn main() -> Result<()> {
     //         tracing::info!("JobScheduler stoped.")
     //     })
     // }));
-    let sched = Arc::new(Mutex::new(job_sched));
+    // let sched = Arc::new(Mutex::new(job_sched));
+    let sched = Arc::new(Mutex::new(JobScheduler::new().await?));
     
-    // jobs::register_initial_jobs(&mut sched.clone()).await?;
+    jobs::register_initial_jobs(&mut sched.clone()).await?;
     
     tracing::info!("Connecting to rabbitmq");
     tracing::info!("Starting scheduler...");
