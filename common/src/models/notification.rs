@@ -20,13 +20,11 @@ pub enum NotifyEvery {
     Month,
 }
 
-
 #[derive(Debug, Display, Serialize, Deserialize, Clone)]
 pub enum NotifyVia {
     Email(String),  // email
     Telegram(String),   //telegram user id ?
 }
-
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct NotificationOptions {
