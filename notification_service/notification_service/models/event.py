@@ -6,9 +6,11 @@ import orjson
 from enum import StrEnum
 from pydantic import BaseModel, Field
 
+
 def orjson_dumps(v, *, default):
     # orjson.dumps returns bytes, to match standard json.dumps we need to decode
     return orjson.dumps(v, default=default).decode()
+
 
 class Model(BaseModel):
     class Config:
@@ -53,10 +55,12 @@ class NotifyEvery(StrEnum):
     WEEK = "week"
     MONTH = "month"
 
+
 class NotificationOptions(Model):
     level: NotificationLevel
     via: list[NotifyVia]
-    every: NotifyEvery | None
+    every: NotifyEvery | None = None
+
 
 class Page(Model):
     id: UUID
@@ -71,9 +75,9 @@ class Page(Model):
     xpaths: dict[str, str]
     created_at: datetime
     updated_at: datetime
-    html: str | None
-    data: dict[str, str] | None
-    meta: str | None
+    html: str | None = None
+    data: dict[str, str] | None = None
+    meta: str | None = None
 
 
 class EventProtocolData(StrEnum):
