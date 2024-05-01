@@ -1,19 +1,21 @@
+#![allow(unused)]
 use std::collections::HashMap;
+use std::string::ToString;
 
 use chrono::{DateTime, Utc};
 use serde::{Serialize, Deserialize};
+use strum_macros::Display;
 use uuid::Uuid;
 
 use crate::models::notification::NotificationOptions;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Display, Serialize, Deserialize, Clone)]
 pub enum Priority {
     Top,
     High,
     Common,
     Low,
 }
-
 
 // TODO: refactor
 #[derive(Debug, Serialize, Deserialize, Clone)]

@@ -16,7 +16,7 @@ use tokio_stream::StreamExt;
 use common::{retry, increasing_retry, infinite_retry};
 
 use crate::config::{BrokerConfig, DbAddr};
-use crate::{scheduler, SharedSheduler};
+use crate::{orchestrator, SharedSheduler};
 use crate::utils::ParseraService;
 
 impl ParseraService {
@@ -44,6 +44,7 @@ impl Rabbit {
         let mut pool_cfg: Config = Config::default();
         pool_cfg.pool = Some(deadpool_config);
         pool_cfg.url = Some(cfg.get_addr());
+        // TODO: increase retry times for initial connection
         let pool = pool_cfg.create_pool(Some(Runtime::Tokio1))?;
     
         let rabbit = Rabbit { pool, cfg };
@@ -166,7 +167,7 @@ impl Rabbit {
         while let Some(delivery) = consumer.next().await {
             match delivery {
                 Ok(delivery) => {
-                    scheduler::handle_event(self, sched.clone(), &delivery.data).await;
+                    orchestrator::handle_event(self, sched.clone(), &delivery.data).await;
                     // TODO: error handling
                     channel
                         .basic_ack(delivery.delivery_tag, BasicAckOptions::default())

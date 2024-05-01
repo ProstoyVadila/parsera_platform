@@ -1,7 +1,11 @@
+#![allow(unused)]
+use std::string::ToString;
+
 use serde::{Serialize, Deserialize};
+use strum_macros::Display;
 
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Display, Serialize, Deserialize, Clone)]
 pub enum NotificationLevel {
     JobsDone,       // When job's done, failed, stats
     JobsFailed,     // When failed and global stats
@@ -9,7 +13,7 @@ pub enum NotificationLevel {
     DoNotDisturb,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Display, Serialize, Deserialize, Clone)]
 pub enum NotifyEvery {
     Day,
     Week,
@@ -17,7 +21,7 @@ pub enum NotifyEvery {
 }
 
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Display, Serialize, Deserialize, Clone)]
 pub enum NotifyVia {
     Email(String),  // email
     Telegram(String),   //telegram user id ?

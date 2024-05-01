@@ -15,7 +15,7 @@ pub trait DbAddr {
 }
 
 #[derive(Envconfig, Clone, Debug)]
-pub struct Database {
+pub struct DatabaseConfig {
     #[envconfig(from = "POSTGRES_HOST", default = "localhost")]
     pub host: String,
     #[envconfig(from = "POSTGRES_PORT", default = "5432")]
@@ -28,7 +28,7 @@ pub struct Database {
     pub user: String,
 }
 
-impl DbAddr for Database {
+impl DbAddr for DatabaseConfig {
     fn get_addr(&self) -> String {
         format!(
             "postgres://{}:{}@{}:{}/{}",
@@ -113,7 +113,7 @@ impl DbAddr for BrokerConfig {
 #[derive(Envconfig, Clone, Debug)]
 pub struct Config {
     #[envconfig(nested = true)]
-    pub database: Database,
+    pub database: DatabaseConfig,
     #[envconfig(nested = true)]
     pub broker: BrokerConfig,
     #[envconfig(from = "LOG_FORMAT", default = "text")]

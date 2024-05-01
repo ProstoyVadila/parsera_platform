@@ -1,114 +1,42 @@
-use deadpool_lapin::lapin::publisher_confirm::PublisherConfirm;
-use serde::{Serialize, Deserialize};
-use tokio_cron_scheduler::Job;
+use std::sync::Arc;
 
-use common::models::{
-    CommandStatus,
-    Crawler,
-    SchedulerCommand,
-    Page,
-    Priority,
-    Site,
-    MessageToScheduler,
-};
+use anyhow::Result;
+use tokio::sync::RwLock;
+use tokio_cron_scheduler::JobScheduler;
 
-use crate::{broker::Rabbit, SharedSheduler};
 
-#[derive(Debug, Deserialize)]
-struct Event {
-    name: String,
-    rule: String,
-    task: String,
+pub struct Scheduler {
+    pub cfg: String,
+    pub broker: String,
+    pub database: String,
+    pub orchestrator: String,
+    pub api: String,
+    pub innner: Arc<RwLock<JobScheduler>>,
 }
 
-
-pub async fn handle_event(broker: &Rabbit, sched: SharedSheduler, event: &[u8]) {
-    let event_job: Event = serde_json::from_slice(event).expect("cannot parse event");
-    tracing::info!("handling event {:?}", event_job);
-
-    let job = Job::new(event_job.rule.as_str(), move |_uuid, _lock| {
-        tracing::warn!("{}: {}", event_job.name, event_job.task);
-    })
-    .expect("cannot register a new job for request");
-
-    let job_id = sched
-        .lock()
-        .await
-        .add(job)
-        .await
-        .expect("cannot register a a new job");
-
-    tracing::debug!("publishing command to queue");
-    let confirm = match broker.publish(event, crate::utils::ParseraService::Notification).await {
-        Ok(c) => c,
-        Err(err) => {
-            tracing::error!("cannot send an event to queue: {}", err);
-            return;
-        }
-    };
-}
-
-pub async fn handle_msg(broker: &Rabbit, sched: SharedSheduler, msg: &[u8]) {
-    let event: MessageToScheduler = match serde_json::from_slice(msg) {
-        Ok(e) => e,
-        Err(err) => {
-            let msg = std::str::from_utf8(msg).expect("invalid message slice");
-            tracing::error!("Error trying handle a new message in consumer. Msg: {}, Err: {}", msg, err);
-            return;
-        },
-    };
-
-    let action = event.action.clone();
-    match action {
-        SchedulerCommand::RegisterCrawler(_) => handle_register_crawler(broker, event).await,
-        SchedulerCommand::ScrapePage(status) => handle_scrape(broker, status, event).await,
-        SchedulerCommand::ExtractPage(status) => handle_extraction(broker, status, event).await,
-        SchedulerCommand::StorePage(status) => handle_store(broker, status, event).await,
-        SchedulerCommand::NotifyUser(status) => handle_notification(broker, status, event).await,
-        SchedulerCommand::Sleep(status) => handle_sleep(broker, status, event).await,
-    };
-}
-
-pub async fn handle_register_crawler(broker: &Rabbit, event: MessageToScheduler) {
-    todo!()
-}
-
-pub async fn handle_scrape(broker: &Rabbit, status: CommandStatus, event: MessageToScheduler) {
-    match status {
-        CommandStatus::Pending => todo!(),
-        CommandStatus::Done => todo!(),
-        CommandStatus::Failed => todo!(),
+impl Scheduler {
+    pub async fn new() -> Result<Self> {
+        todo!()
     }
-}
 
-pub async fn handle_extraction(broker: &Rabbit, status: CommandStatus, event: MessageToScheduler) {
-    match status {
-        CommandStatus::Pending => todo!(),
-        CommandStatus::Done => todo!(),
-        CommandStatus::Failed => todo!(),
+    async fn init_broker() -> Result<()> {
+        todo!()
     }
-}
 
-pub async fn handle_store(broker: &Rabbit, status: CommandStatus, event: MessageToScheduler) {
-    match status {
-        CommandStatus::Pending => todo!(),
-        CommandStatus::Done => todo!(),
-        CommandStatus::Failed => todo!(),
+    async fn init_database() -> Result<()> {
+        todo!()
     }
-}
 
-pub async fn handle_notification(broker: &Rabbit, status: CommandStatus, event: MessageToScheduler) {
-    match status {
-        CommandStatus::Pending => todo!(),
-        CommandStatus::Done => todo!(),
-        CommandStatus::Failed => todo!(),
+    async fn init_http_server() -> Result<()> {
+        todo!()
     }
-}
 
-pub async fn handle_sleep(broker: &Rabbit, status: CommandStatus, event: MessageToScheduler) {
-    match status {
-        CommandStatus::Pending => todo!(),
-        CommandStatus::Done => todo!(),
-        CommandStatus::Failed => todo!(),
+    async fn init_grpc_server() -> Result<()> {
+        // TODO: migrate from http to grpc
+        todo!()
+    }
+
+    pub async fn run() -> Result<()> {
+        todo!()
     }
 }

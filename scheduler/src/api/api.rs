@@ -6,7 +6,7 @@ use tokio_cron_scheduler::Job;
 use tracing::event;
 use tracing_actix_web::{RequestId, TracingLogger};
 
-use common::models::{CommandStatus, Crawler, EventProtocol, EventProtocolData, MockCrawler, SchedulerCommand};
+use common::models::{EventCommandStatus, Crawler, EventProtocol, EventProtocolData, EventCommand};
 
 use crate::config::Config;
 use crate::SharedSheduler;

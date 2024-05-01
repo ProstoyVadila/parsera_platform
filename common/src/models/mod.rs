@@ -4,12 +4,10 @@ use serde::{Deserialize, Serialize};
 
 mod notification;
 mod crawler;
-mod scheduler;
 mod event;
 
 pub use notification::*;
 pub use crawler::*;
-pub use scheduler::*;
 pub use event::*;
 
 // TODO: remove this
