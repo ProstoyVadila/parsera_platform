@@ -78,35 +78,35 @@ Blabla
 
 ### Scheduler
 
-blabla
+...
 
 ### Scraper
 
-blabla
+...
 
 ### Heavy Artillery
 
-Blabla
+...
 
 ### Extractor
 
-blabla
+...
 
 ### Anonymizer
 
-blabla
+...
 
 ### Database manager
 
-blabla
+...
 
 ### Notification Service
 
-bombom
+...
 
 ### Status manager
 
-blabla
+...
 
 ## What's Next?
 
